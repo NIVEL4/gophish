@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"time"
 
 	"bitbucket.org/liamstask/goose/lib/goose"
@@ -33,6 +34,7 @@ const DefaultAdminUsername = "admin"
 // password to use for the initial root login instead of generating one
 // randomly
 const InitialAdminPassword = "GOPHISH_INITIAL_ADMIN_PASSWORD"
+const AdminPasswordShouldBeReset = "GOPHISH_ADMIN_PASSWORD_SHOULD_BE_RESET"
 
 // InitialAdminApiToken is the environment variable that specifies the
 // API token to seed the initial root login instead of generating one
@@ -112,9 +114,21 @@ func createTemporaryPassword(u *User) error {
 		return err
 	}
 	u.Hash = hash
-	// Anytime a temporary password is created, we will force the user
-	// to change their password
-	u.PasswordChangeRequired = true
+
+	// Determine if PasswordChangeRequired should be true or false
+	passwordChangeRequired := true // Default value
+	if envPasswordChangeRequired := os.Getenv(AdminPasswordShouldBeReset); envPasswordChangeRequired != "" {
+		// Try to parse the environment variable to boolean
+		if val, err := strconv.ParseBool(envPasswordChangeRequired); err == nil {
+			passwordChangeRequired = val
+		} else {
+			log.Errorf("Failed to parse %v as boolean: %v", AdminPasswordShouldBeReset, err)
+		}
+	}
+
+	// Set PasswordChangeRequired according to the determined value
+	u.PasswordChangeRequired = passwordChangeRequired
+
 	err = db.Save(u).Error
 	if err != nil {
 		return err
