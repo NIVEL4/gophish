@@ -102,6 +102,8 @@ func chooseDBDriver(name, openStr string) goose.DBDriver {
 
 func createTemporaryPassword(u *User) error {
 	var temporaryPassword string
+
+	// TODO: password reset enforcement/bypass should be tested
 	if envPassword := os.Getenv(InitialAdminPassword); envPassword != "" {
 		temporaryPassword = envPassword
 	} else {
