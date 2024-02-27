@@ -29,15 +29,15 @@ func (s *ModelsSuite) TestAttachment(c *check.C) {
 		RId:         "1234567",
 	}
 
-	files, err := ioutil.ReadDir("testdata")
+	files, err := os.ReadDir("attachment-testdata")
 	if err != nil {
-		log.Fatalf("Failed to open attachment folder 'testdata': %v\n", err)
+		log.Fatalf("Failed to open attachment-testdata folder 'attachment-testdata': %v\n", err)
 	}
 	for _, ff := range files {
 		if !ff.IsDir() && !strings.Contains(ff.Name(), "templated") {
 			fname := ff.Name()
 			fmt.Printf("Checking attachment file -> %s\n", fname)
-			data := readFile("testdata/" + fname)
+			data := readFile("attachment-testdata/" + fname)
 			if filepath.Ext(fname) == ".b64" {
 				fname = fname[:len(fname)-4]
 			}
@@ -56,7 +56,7 @@ func (s *ModelsSuite) TestAttachment(c *check.C) {
 				log.Fatalf("Failed to parse templated file '%s': %v\n", fname, err)
 			}
 			templatedFile := base64.StdEncoding.EncodeToString(tt)
-			expectedOutput := readFile("testdata/" + strings.TrimSuffix(ff.Name(), filepath.Ext(ff.Name())) + ".templated" + filepath.Ext(ff.Name())) // e.g text-file-with-vars.templated.txt
+			expectedOutput := readFile("attachment-testdata/" + strings.TrimSuffix(ff.Name(), filepath.Ext(ff.Name())) + ".templated" + filepath.Ext(ff.Name())) // e.g text-file-with-vars.templated.txt
 			c.Assert(templatedFile, check.Equals, expectedOutput)
 		}
 	}

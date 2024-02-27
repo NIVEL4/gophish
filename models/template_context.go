@@ -2,10 +2,14 @@ package models
 
 import (
 	"bytes"
+	"fmt"
 	"net/mail"
 	"net/url"
 	"path"
+	"strings"
 	"text/template"
+
+	qrcode "github.com/skip2/go-qrcode" //library for generating qrcode
 )
 
 // TemplateContext is an interface that allows both campaigns and email
@@ -24,6 +28,7 @@ type PhishingTemplateContext struct {
 	TrackingURL string
 	RId         string
 	BaseURL     string
+	QrCode      string
 	BaseRecipient
 }
 
@@ -61,6 +66,8 @@ func NewPhishingTemplateContext(ctx TemplateContext, r BaseRecipient, rid string
 	trackingURL.Path = path.Join(trackingURL.Path, "/track")
 	trackingURL.RawQuery = q.Encode()
 
+	qrCodeHtml := generateQRCodeHTML(phishURL.String())
+
 	return PhishingTemplateContext{
 		BaseRecipient: r,
 		BaseURL:       baseURL.String(),
@@ -69,6 +76,7 @@ func NewPhishingTemplateContext(ctx TemplateContext, r BaseRecipient, rid string
 		Tracker:       "<img alt='' style='display: none' src='" + trackingURL.String() + "'/>",
 		From:          fn,
 		RId:           rid,
+		QrCode:        qrCodeHtml,
 	}, nil
 }
 
@@ -123,4 +131,40 @@ func ValidateTemplate(text string) error {
 		return err
 	}
 	return nil
+}
+
+// Generate Qrcode HTML representation
+func generateQRCodeHTML(websiteURL string) string {
+	// Generate QR code
+	q, err := qrcode.New(websiteURL, qrcode.Medium)
+	if err != nil {
+		fmt.Println("Error generating QR code:", err)
+		return ""
+	}
+
+	// Get QR code bitmap
+	qrCode := q.Bitmap()
+
+	// Determine QR code dimensions
+	qrWidth := len(qrCode)
+
+	// Construct HTML table
+	var html strings.Builder
+	html.WriteString("<table style=\"border-collapse: collapse;\">")
+
+	for y := 0; y < qrWidth; y++ {
+		html.WriteString("<tr>")
+		for x := 0; x < qrWidth; x++ {
+			if qrCode[y][x] {
+				html.WriteString("<td style=\"width: 1px; height: 1px; background-color: black; border: 1px solid black;\"></td>")
+			} else {
+				html.WriteString("<td style=\"width: 1px; height: 1px; background-color: transparent; border: none;\"></td>")
+			}
+		}
+		html.WriteString("</tr>")
+	}
+
+	html.WriteString("</table>\n")
+
+	return html.String()
 }
