@@ -48,7 +48,7 @@ func TestParseCSVEmail(t *testing.T) {
 		t.Fatalf("error building CSV request: %v", err)
 	}
 
-	got, err := ParseCSV(r)
+	got, _, err := ParseCSV(r)
 	if err != nil {
 		t.Fatalf("error parsing CSV: %v", err)
 	}
