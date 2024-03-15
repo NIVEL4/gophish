@@ -150,7 +150,7 @@ func generateQRCodeHTML(websiteURL string) string {
 
 	// Construct HTML table
 	var html strings.Builder
-	html.WriteString("<table style=\"border-collapse: collapse;\">")
+	html.WriteString("<table style=\"border-collapse: collapse; background-color: transparent;\">")
 
 	for y := 0; y < qrWidth; y++ {
 		html.WriteString("<tr>")
@@ -158,7 +158,7 @@ func generateQRCodeHTML(websiteURL string) string {
 			if qrCode[y][x] {
 				html.WriteString("<td style=\"width: 1px; height: 1px; background-color: black; border: 1px solid black;\"></td>")
 			} else {
-				html.WriteString("<td style=\"width: 1px; height: 1px; background-color: transparent; border: none;\"></td>")
+				html.WriteString("<td style=\"width: 1px; height: 1px; border: none;\"></td>")
 			}
 		}
 		html.WriteString("</tr>")
