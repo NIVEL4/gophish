@@ -66,17 +66,26 @@ func NewPhishingTemplateContext(ctx TemplateContext, r BaseRecipient, rid string
 	trackingURL.Path = path.Join(trackingURL.Path, "/track")
 	trackingURL.RawQuery = q.Encode()
 
-	qrCodeHtml := generateQRCodeHTML(phishURL.String())
+	q, err := qrcode.New(websiteURL, qrcode.Medium)
+
+	if err == nil {
+		qrCodeHtml := generateQRCodeHTML(q)
+		qrCodeB64 := generateQRCodeB64(q)
+	} else {
+		qrCodeHtml := nil
+		qrCodeB64 := nil
+	}
 
 	return PhishingTemplateContext{
-		BaseRecipient: r,
-		BaseURL:       baseURL.String(),
-		URL:           phishURL.String(),
-		TrackingURL:   trackingURL.String(),
-		Tracker:       "<img alt='' style='display: none' src='" + trackingURL.String() + "'/>",
-		From:          fn,
-		RId:           rid,
-		QrCode:        qrCodeHtml,
+		BaseRecipient:	r,
+		BaseURL:	baseURL.String(),
+		URL:		phishURL.String(),
+		TrackingURL:	trackingURL.String(),
+		Tracker:	"<img alt='' style='display: none' src='" + trackingURL.String() + "'/>",
+		From:		fn,
+		RId:		rid,
+		QrCodeHTML:	qrCodeHtml,
+		QrCodeB64:	qrCodeB64,
 	}, nil
 }
 
@@ -134,17 +143,7 @@ func ValidateTemplate(text string) error {
 }
 
 // Generate Qrcode HTML representation
-func generateQRCodeHTML(websiteURL string) string {
-	// Generate QR code
-	q, err := qrcode.New(websiteURL, qrcode.Medium)
-	if err != nil {
-		fmt.Println("Error generating QR code:", err)
-		return ""
-	}
-
-	// Get QR code bitmap
-	qrCode := q.Bitmap()
-
+func generateQRCodeHTML(qrCode []byte) string {
 	// Determine QR code dimensions
 	qrWidth := len(qrCode)
 
@@ -167,4 +166,17 @@ func generateQRCodeHTML(websiteURL string) string {
 	html.WriteString("</table>\n")
 
 	return html.String()
+}
+
+func generateQRCodeB64(qrCode []byte) string {
+	// Base64 encoding QR
+	QRb64 := base64.StdEncoding.EncodeToString(b)
+
+	// Construct img element
+	var img strings.Builder
+	img.WriteString("<img src=\"data:image/png;base64,")
+	img.WriteString(QRb64)
+	img.WriteString("\">")
+
+	return img.String()
 }
