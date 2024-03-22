@@ -42,6 +42,13 @@ func (s *ModelsSuite) TestNewTemplateContext(c *check.C) {
 	// Remove extra backslashes from the read string
 	expectedHTMLString := string(expectedHTMLBytes)
 
+	expectedB64FilePath := "./qr-test-data/test-qr-code.b64"
+	expectedB64Bytes, err := os.ReadFile(expectedB64FilePath)
+	if err != nil {
+		cFatalf("Failed to read b64 file: %v", err)
+	}
+	expectedB64String := string(expectedB64Bytes)
+
 	expected := PhishingTemplateContext{
 		URL:           fmt.Sprintf("%s?rid=%s", ctx.URL, r.RId),
 		BaseURL:       ctx.URL,
@@ -50,6 +57,7 @@ func (s *ModelsSuite) TestNewTemplateContext(c *check.C) {
 		From:          "From Address",
 		RId:           r.RId,
 		QrCodeHTML:    expectedHTMLString,
+		QrCodeB64:     expectedB64String,
 	}
 	expected.Tracker = "<img alt='' style='display: none' src='" + expected.TrackingURL + "'/>"
 	got, err := NewPhishingTemplateContext(ctx, r.BaseRecipient, r.RId)
