@@ -2,7 +2,7 @@ package models
 
 import (
 	"bytes"
-	"fmt"
+	"encoding/base64"
 	"net/mail"
 	"net/url"
 	"path"
@@ -28,7 +28,8 @@ type PhishingTemplateContext struct {
 	TrackingURL string
 	RId         string
 	BaseURL     string
-	QrCode      string
+	QrCodeHTML  string
+	QrCodeB64   string
 	BaseRecipient
 }
 
@@ -66,15 +67,11 @@ func NewPhishingTemplateContext(ctx TemplateContext, r BaseRecipient, rid string
 	trackingURL.Path = path.Join(trackingURL.Path, "/track")
 	trackingURL.RawQuery = q.Encode()
 
-	q, err := qrcode.New(websiteURL, qrcode.Medium)
+	var qr *qrcode.QRCode
+	qr, err = qrcode.New(phishURL.String(), qrcode.Medium)
 
-	if err == nil {
-		qrCodeHtml := generateQRCodeHTML(q)
-		qrCodeB64 := generateQRCodeB64(q)
-	} else {
-		qrCodeHtml := nil
-		qrCodeB64 := nil
-	}
+	qrCodeHtml := generateQRCodeHTML(qr)
+	qrCodeB64 := generateQRCodeB64(qr)
 
 	return PhishingTemplateContext{
 		BaseRecipient:	r,
@@ -143,7 +140,9 @@ func ValidateTemplate(text string) error {
 }
 
 // Generate Qrcode HTML representation
-func generateQRCodeHTML(qrCode []byte) string {
+func generateQRCodeHTML(qr *qrcode.QRCode) string {
+	qrCode := qr.Bitmap()
+
 	// Determine QR code dimensions
 	qrWidth := len(qrCode)
 
@@ -168,9 +167,12 @@ func generateQRCodeHTML(qrCode []byte) string {
 	return html.String()
 }
 
-func generateQRCodeB64(qrCode []byte) string {
-	// Base64 encoding QR
-	QRb64 := base64.StdEncoding.EncodeToString(b)
+func generateQRCodeB64(qr *qrcode.QRCode) string {
+	// QR to PNG 256x256
+	QRPNG, _ := qr.PNG(256)
+
+	// B64 encoding PNG
+	QRb64 := base64.StdEncoding.EncodeToString(QRPNG)
 
 	// Construct img element
 	var img strings.Builder
