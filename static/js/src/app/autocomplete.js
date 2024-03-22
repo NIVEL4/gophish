@@ -45,8 +45,13 @@ var TEMPLATE_TAGS = [{
     },
     {
 	id: 10,
-	name: 'QrCode',
-	description: 'Generates a QR code encoding the TrackingURL.'
+	name: 'QrCodeHTML',
+	description: 'Generates an HTML based QR for the URL.'
+    },
+    {
+	id: 11,
+	name: 'QrCodeB64',
+	description: 'Generates a base64 encoded PNG image of a QR code for the URL. No suitable for Gmail.'
     }
 ];
 
