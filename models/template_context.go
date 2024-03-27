@@ -74,15 +74,15 @@ func NewPhishingTemplateContext(ctx TemplateContext, r BaseRecipient, rid string
 	qrCodeB64 := generateQRCodeB64(qr)
 
 	return PhishingTemplateContext{
-		BaseRecipient:  r,
-		BaseURL:        baseURL.String(),
-		URL:            phishURL.String(),
-		TrackingURL:    trackingURL.String(),
-		Tracker:        "<img alt='' style='display: none' src='" + trackingURL.String() + "'/>",
-		From:           fn,
-		RId:            rid,
-		QrCodeHTML:     qrCodeHtml,
-		QrCodeB64:      qrCodeB64,
+		BaseRecipient: r,
+		BaseURL:       baseURL.String(),
+		URL:           phishURL.String(),
+		TrackingURL:   trackingURL.String(),
+		Tracker:       "<img alt='' style='display: none' src='" + trackingURL.String() + "'/>",
+		From:          fn,
+		RId:           rid,
+		QrCodeHTML:    qrCodeHtml,
+		QrCodeB64:     qrCodeB64,
 	}, nil
 }
 
