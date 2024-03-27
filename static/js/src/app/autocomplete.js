@@ -51,7 +51,7 @@ var TEMPLATE_TAGS = [{
     {
 	id: 11,
 	name: 'QrCodeB64',
-	description: 'Generates a base64 encoded PNG image of a QR code for the URL. No suitable for Gmail.'
+	description: 'Generates a base64 encoded PNG image of a QR code for the URL. Not suitable for Gmail.'
     }
 ];
 
