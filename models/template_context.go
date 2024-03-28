@@ -6,6 +6,7 @@ import (
 	"net/mail"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -148,15 +149,31 @@ func generateQRCodeHTML(qr *qrcode.QRCode) string {
 
 	// Construct HTML table
 	var html strings.Builder
-	html.WriteString("<table style=\"border-collapse: collapse; background-color: transparent;\">")
+	html.WriteString("<table style=\"border-collapse: collapse; border: none; background-color: transparent;\">")
 
 	for y := 0; y < qrWidth; y++ {
 		html.WriteString("<tr>")
-		for x := 0; x < qrWidth; x++ {
+		x := 0
+		for x < qrWidth {
+			colspan := 0
 			if qrCode[y][x] {
-				html.WriteString("<td style=\"width: 1px; height: 1px; background-color: black; border: 1px solid black;\"></td>")
+				for x < qrWidth && qrCode[y][x] {
+					colspan++
+					x++
+				}
+				html.WriteString("<td style=\"width: 1px; height: 1px; background-color: black; border: 1px solid black;\" colspan=")
+				colspanStr := strconv.Itoa(colspan)
+				html.WriteString(colspanStr)
+				html.WriteString("></td>")
 			} else {
-				html.WriteString("<td style=\"width: 1px; height: 1px; border: none;\"></td>")
+				for x < qrWidth && !qrCode[y][x] {
+					colspan++
+					x++
+				}
+				html.WriteString("<td style=\"width: 1px; height: 1px; border: none;\" colspan=")
+				colspanStr := strconv.Itoa(colspan)
+				html.WriteString(colspanStr)
+				html.WriteString("></td>")
 			}
 		}
 		html.WriteString("</tr>")
