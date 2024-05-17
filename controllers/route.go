@@ -132,6 +132,7 @@ func (as *AdminServer) registerRoutes() {
 	router.HandleFunc("/templates", mid.Use(as.Templates, mid.RequireLogin))
 	router.HandleFunc("/groups", mid.Use(as.Groups, mid.RequireLogin))
 	router.HandleFunc("/landing_pages", mid.Use(as.LandingPages, mid.RequireLogin))
+	router.HandleFunc("/static", mid.Use(as.Static, mid.RequireLogin))
 	router.HandleFunc("/sending_profiles", mid.Use(as.SendingProfiles, mid.RequireLogin))
 	router.HandleFunc("/settings", mid.Use(as.Settings, mid.RequireLogin))
 	router.HandleFunc("/users", mid.Use(as.UserManagement, mid.RequirePermission(models.PermissionModifySystem), mid.RequireLogin))
@@ -243,6 +244,13 @@ func (as *AdminServer) SendingProfiles(w http.ResponseWriter, r *http.Request) {
 	params := newTemplateParams(r)
 	params.Title = "Sending Profiles"
 	getTemplate(w, "sending_profiles").ExecuteTemplate(w, "base", params)
+}
+
+// Static content handles the default path and template execution
+func (as *AdminServer) Static(w http.ResponseWriter, r *http.Request) {
+	params := newTemplateParams(r)
+	params.Title = "Static Content"
+	getTemplate(w, "static").ExecuteTemplate(w, "base", params)
 }
 
 // Settings handles the changing of settings
