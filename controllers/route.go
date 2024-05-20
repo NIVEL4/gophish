@@ -250,7 +250,7 @@ func (as *AdminServer) SendingProfiles(w http.ResponseWriter, r *http.Request) {
 func (as *AdminServer) Static(w http.ResponseWriter, r *http.Request) {
 	params := newTemplateParams(r)
 	params.Title = "Static Content"
-	getTemplate(w, "static").ExecuteTemplate(w, "base", params)
+	getTemplate(w, "static_content").ExecuteTemplate(w, "base", params)
 }
 
 // Settings handles the changing of settings
