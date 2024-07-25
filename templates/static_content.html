@@ -10,11 +10,33 @@
         <button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#modal" onclick="">
 	    <i class="fa fa-plus"></i>Upload</button>
 
-	<img href="/api/static_content?path=/">
+    </div>
+    &nbsp;
+    <div id="loading">
+        <i class="fa fa-spinner fa-spin fa-4x"></i>
+    </div>
+    <div id="emptyMessage" class="row" style="display: none;">
+        <div class="alert alert-info">
+	    No files or directories found. Upload one!
+	</div>
+    </div>
+    <div class="row">
+        <table id="dirTable" class="table" style="display: none;">
+	    <thead>
+                <tr>
+		    <th>Type</th>
+		    <th>Name</th>
+		    <th class="col-md-2 no-sort"></th>
+		</tr>
+	    </thead>
+	    <tbody>
+	    </tbody>
+	</table>
+    </div>
 </div>
 {{end}} {{define "scripts"}}
 <script>
 
 </script>
-<script src="/js/dist/app/groups.min.js"></script>
+<script src="/js/dist/app/static.min.js"></script>
 {{end}}

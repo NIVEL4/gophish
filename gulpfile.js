@@ -60,6 +60,7 @@ scripts = function () {
             app_directory + 'sending_profiles.js',
             app_directory + 'settings.js',
             app_directory + 'templates.js',
+	    app_directory + 'static.js',
             app_directory + 'gophish.js',
             app_directory + 'users.js',
             app_directory + 'webhooks.js',

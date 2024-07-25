@@ -211,6 +211,25 @@ var api = {
             return query("/pages/" + id, "DELETE", {}, false)
         }
     },
+    // static_content contains the endpoints for /static_content/
+    static_content: {
+	// get() - Queries the files and directories in path
+        get: function (path) {
+	    return query("/static_content/?path=" + path, "GET", {}, false)
+	},
+	// put() - Uploads a file to path
+	put: function (path) {
+            return query("/static_content/?path=" + path, "PUT", {}, false)
+	},
+	// post() - Creates a directory in path
+        post: function (path) {
+	    return query("/static_content/?path=" + path, "POST", {}, false)
+	},
+	// delete() - Deletes the file in path
+	delete: function (path) {
+	    return query("/static_content/?path=" + path, "DELETE", {}, false)
+	}
+    },
     // SMTP contains the endpoints for /smtp
     SMTP: {
         // get() - Queries the API for GET /smtp

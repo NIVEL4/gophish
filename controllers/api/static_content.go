@@ -3,12 +3,14 @@ package api
 import (
 	"os"
 	"net/http"
+	"strconv"
 	"strings"
 	"path/filepath"
 	"encoding/json"
 	"io/ioutil"
 	"encoding/base64"
 
+	log "github.com/gophish/gophish/logger"
 	"github.com/gophish/gophish/models"
 )
 
@@ -24,6 +26,9 @@ func ls(dir string) (map[string][]string, error) {
 		if file.IsDir() {
 			dir_names = append(dir_names, file.Name())
 		} else {
+			if file.Name() == ".gitignore" {
+				continue
+			}
 			file_names = append(file_names, file.Name())
 		}
 	}
@@ -46,11 +51,9 @@ func (as *Server) StaticContent(w http.ResponseWriter, r *http.Request) {
 	switch {
 	// Listing dirs in path
 	case r.Method == "GET":
-		dirlist, err := ls(full_path)
-		if err != nil {
-			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
-			return
-		}
+		parent, _ := strconv.Atoi(v.Get("parent"))
+		log.Infof("Parent: %s", parent)
+		dirlist, err := models.GetDirectory(int64(parent))
 		if err != nil {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
 			return
