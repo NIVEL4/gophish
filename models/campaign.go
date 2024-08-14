@@ -31,6 +31,7 @@ type Campaign struct {
 	SMTPId        int64     `json:"-"`
 	SMTP          SMTP      `json:"smtp"`
 	URL           string    `json:"url"`
+	IsTest        bool      `json:"is_test"`
 }
 
 // CampaignResults is a struct representing the results from a campaign
@@ -532,9 +533,11 @@ func PostCampaign(c *Campaign, uid int64) error {
 		log.Error(err)
 		return err
 	}
-	err = AddEvent(&Event{Message: "Campaign Created"}, c.Id)
-	if err != nil {
-		log.Error(err)
+	if !c.IsTest {
+		err = AddEvent(&Event{Message: "Campaign Created"}, c.Id)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 	// Insert all the results
 	resultMap := make(map[string]bool)

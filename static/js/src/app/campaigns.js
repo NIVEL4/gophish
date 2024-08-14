@@ -52,6 +52,7 @@ function launch() {
                     launch_date: moment($("#launch_date").val(), "MMMM Do YYYY, h:mm a").utc().format(),
                     send_by_date: send_by_date || null,
                     groups: groups,
+                    is_test: $('#is_test')[0].checked,
                 }
                 // Submit the campaign
                 api.campaigns.post(campaign)
