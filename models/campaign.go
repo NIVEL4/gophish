@@ -160,8 +160,14 @@ func AddEvent(e *Event, campaignID int64) error {
 	e.CampaignId = campaignID
 	e.Time = time.Now().UTC()
 
+	c := Campaign{}
+	err1 := db.Table("campaigns").Where("id=?", campaignID).Find(&c).Error
+	if err1 != nil {
+		log.Warnf("%s: could not find campaign with id %d", err1, campaignID)
+		return err1
+	}
 	whs, err := GetActiveWebhooks()
-	if err == nil {
+	if err == nil && !c.IsTest {
 		whEndPoints := []webhook.EndPoint{}
 		for _, wh := range whs {
 			whEndPoints = append(whEndPoints, webhook.EndPoint{
