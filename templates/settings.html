@@ -13,6 +13,8 @@
                 Settings</a></li>
         <li role="reportingSettings"><a href="#reportingSettings" aria-controls="reportingSettings" role="tab" id="reporttab"
             data-toggle="tab">Reporting Settings</a></li>
+        <li role="qrSettings"><a href="#qrSettings" aria-controls="qrSettings" role="tab" 
+            data-toggle="tab">QR Settings</a></li>
     </ul>
     <!-- Tab Panes -->
     <div class="tab-content">
@@ -238,7 +240,45 @@
             <button class="btn btn-primary" id="validateimap" type="button"><i class="fa fa-wrench"></i> Test Settings</button>
 
 
-        </form>
+            </form>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="qrSettings">
+            <br>
+            <form id="qrSettingsForm">
+                <div class="row">
+                    <label for="qr_height" class="col-sm-4 control-label form-label">QR Height (px):</label>
+                    <div class="col-md-2">
+                        <input type="number" id="qr_height" name="qr_height" min="64" step="1" value=""
+                            class="form-control" />
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <label for="qr_width" class="col-sm-4 control-label form-label">QR Width (px):</label>
+                    <div class="col-md-2">
+                        <input type="number" id="qr_width" name="qr_width" min="64" step="1" value=""
+                            class="form-control" />
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <label for="qr_pixels" class="col-sm-4 control-label form-label">QR Pixel Color:</label>
+                    <div class="col-md-1">
+                        <input type="color" id="qr_pixels" name="qr_pixels" value="#000000"
+                            class="form-control" />
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <label for="qr_background" class="col-sm-4 control-label form-label">QR Background Color:</label>
+                    <div class="col-md-1">
+                        <input type="color" id="qr_background" name="qr_background" value="#ffffff"
+                            class="form-control" />
+                    </div>
+                </div>
+                <br />
+                <button class="btn btn-primary" id ="saveqrsettings" type="button"><i class="fa fa-save"></i> Save</button>
+            </form>
         </div>
         <!-- Reporting Settings End -->
     </div>
