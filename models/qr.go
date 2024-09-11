@@ -16,8 +16,7 @@ import (
 // QR contains the settings for generating QR codes
 type QR struct {
 	UserId		 int64	   `json:"user_id"`
-	Height       int64     `json:"height"`
-	Width        int64     `json:"width"`
+	Size         int64     `json:"size"`
 	Pixels       string    `json:"pixels"`
 	Background   string    `json:"background"`
 }
@@ -30,7 +29,7 @@ var ErrInvalidColor = errors.New("Invalid color")
 
 // Validate performs validation on given settings
 func (qr *QR) Validate() error {
-	if qr.Height < 64 || qr.Width < 64 {
+	if qr.Size < 64 {
 		return ErrQRCodeTooSmall
 	}
 	r, _ := regexp.MustCompile("^#[[:xdigit:]]{3,6}$")
@@ -38,6 +37,11 @@ func (qr *QR) Validate() error {
 		return ErrInvalidColor
 	}
 	return nil
+}
+
+// TableName specifies the database tablename for Gorm to use
+func (qr QR) TableName() string {
+	return "qr_conf"
 }
 
 // GetQR returns the QR settings
