@@ -3,14 +3,14 @@ package models
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"net/mail"
 	"net/url"
 	"path"
-	"strconv"
 	"strings"
 	"text/template"
 
-	"github.com/gophish/gophish/models"
+	log "github.com/gophish/gophish/logger"
 	qrcode "github.com/skip2/go-qrcode" //library for generating qrcode
 )
 
@@ -69,12 +69,13 @@ func NewPhishingTemplateContext(ctx TemplateContext, r BaseRecipient, rid string
 	trackingURL.Path = path.Join(trackingURL.Path, "/track")
 	trackingURL.RawQuery = q.Encode()
 
-	qr_conf := models.QR.GetQR()
+	qr_conf, err := GetQR()
+	if err != nil {
+		log.Error(err)
+	}
 
 	var qr *qrcode.QRCode
-	qr, err = qrcode.New(phishURL.String(), qrcode.Medium, qr_conf.Size)
-	qr.ForegroundColor = qr_conf.GetForegroundColor()
-	qr.BackgroundColor = qr_conf.GetBackgroundColor()
+	qr, _ = qrcode.New(phishURL.String(), qrcode.Medium)
 
 	qrCodeHtml := generateQRCodeHTML(qr, qr_conf)
 	qrCodeB64 := generateQRCodeB64(qr, qr_conf)
@@ -150,11 +151,14 @@ func generateQRCodeHTML(qr *qrcode.QRCode, qr_conf QR) string {
 	qrCode := qr.Bitmap()
 
 	// Determine QR code dimensions
-	qrWidth := qr_conf.Size
+	qrWidth := len(qrCode)
+
+	pixelSize := int(qr_conf.Size) / qrWidth
 
 	// Construct HTML table
 	var html strings.Builder
-	html.WriteString("<table style=\"border-collapse: collapse; border: none; background-color: %s;\">", qr_conf.Background)
+	tableOpen := fmt.Sprintf("<table style=\"border-collapse: collapse; border: none; background-color: %s;\">", qr_conf.Background)
+	html.WriteString(tableOpen)
 
 	for y := 0; y < qrWidth; y++ {
 		html.WriteString("<tr>")
@@ -166,17 +170,15 @@ func generateQRCodeHTML(qr *qrcode.QRCode, qr_conf QR) string {
 					colspan++
 					x++
 				}
-				html.WriteString(
-					"<td style=\"width: 1px; height: 1px; background-color: %s; border: 1px solid black;\" colspan=%d></td>", 
-					qr_conf.Pixels, 
-					colspan
-				)
+				qrForeground := fmt.Sprintf("<td style=\"width: %dpx; height: %dpx; background-color: %s; border: 0px;\" colspan=%d></td>", pixelSize, pixelSize, qr_conf.Pixels, colspan)
+				html.WriteString(qrForeground)
 			} else {
 				for x < qrWidth && !qrCode[y][x] {
 					colspan++
 					x++
 				}
-				html.WriteString("<td style=\"width: 1px; height: 1px; border: none;\" colspan=%d></td>", colspan)
+				qrBackground := fmt.Sprintf("<td style=\"width: %dpx; height: %dpx; border: none;\" colspan=%d></td>", pixelSize, pixelSize, colspan)
+				html.WriteString(qrBackground)
 			}
 		}
 		html.WriteString("</tr>")
@@ -188,8 +190,13 @@ func generateQRCodeHTML(qr *qrcode.QRCode, qr_conf QR) string {
 }
 
 func generateQRCodeB64(qr *qrcode.QRCode, qr_conf QR) string {
+	qr.BackgroundColor, _ = qr_conf.GetBackgroundColor()
+	qr.ForegroundColor, _ = qr_conf.GetForegroundColor()
+
+	log.Info(qr)
+
 	// QR to PNG
-	QRPNG, _ := qr.PNG(qr_conf.Size)
+	QRPNG, _ := qr.PNG(int(qr_conf.Size))
 
 	// B64 encoding PNG
 	QRb64 := base64.StdEncoding.EncodeToString(QRPNG)

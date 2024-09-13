@@ -2,24 +2,18 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"image/color"
-	"net/mail"
 	"regexp"
 	"strconv"
-	"strings"
-	"time"
 
 	log "github.com/gophish/gophish/logger"
-	"github.com/jinzhu/gorm"
-	"github.com/sirupsen/logrus"
 )
 
 // QR contains the settings for generating QR codes
 type QR struct {
-	Size         int64     `json:"qr_size"`
-	Pixels       string    `json:"qr_pixels"`
-	Background   string    `json:"qr_background"`
+	Size       int64  `json:"qr_size"`
+	Pixels     string `json:"qr_pixels"`
+	Background string `json:"qr_background"`
 }
 
 // ErrQRCodeTooSmall is thrown when QR code dimensions are too small for a QR code
@@ -33,7 +27,7 @@ func (qr *QR) Validate() error {
 	if qr.Size < 64 {
 		return ErrQRCodeTooSmall
 	}
-	r, _ := regexp.MustCompile("^#[[:xdigit:]]{6}$")
+	r := regexp.MustCompile("^#[[:xdigit:]]{6}$")
 	if !r.MatchString(qr.Pixels) || !r.MatchString(qr.Background) {
 		return ErrInvalidColor
 	}
@@ -41,50 +35,50 @@ func (qr *QR) Validate() error {
 }
 
 // TableName specifies the database tablename for Gorm to use
-func (qr QR) TableName() string {
+func (qr *QR) TableName() string {
 	return "qr_conf"
 }
 
 // GetQR returns the QR settings
 func GetQR() (QR, error) {
-	qr := QR{}
-	err := db.Find(&qr).Error
+	var qrcode QR
+	err := db.Find(&qrcode).Error
 	if err != nil {
 		log.Error(err)
 	}
-	return g, err
+	return qrcode, err
 }
 
 // GetForegroundColor returns the color for the foreground pixels
-func GetForegroundColor() (color.Color, error) {
-	qr, err := GetQR()
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
+func (qr *QR) GetForegroundColor() (color.Color, error) {
+	var c color.RGBA
 	r, g, b, err := qr.Str2RGB(qr.Pixels)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-	var c *color.Color
-	return c.RGBA(r, g, b, 1)
+	c.R = r
+	c.G = g
+	c.B = b
+	c.A = 255
+
+	return c, nil
 }
 
 // GetBackgroundColor returns the color for the background pixels
-func GetBackgroundColor() (color.Color, error) {
-	qr, err := GetQR()
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
+func (qr *QR) GetBackgroundColor() (color.Color, error) {
+	var c color.RGBA
 	r, g, b, err := qr.Str2RGB(qr.Background)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-	var c *color.Color
-	return c.RGBA(r, g, b, 1)
+	c.R = r
+	c.G = g
+	c.B = b
+	c.A = 255
+
+	return c, nil
 }
 
 // DeleteQR deletes que QR code settings
@@ -116,7 +110,7 @@ func UpdateQR(qr *QR) error {
 	return err
 }
 
-func (qr *QR) Str2RGB(cstr string) (uint32, uint32, uint32, error) {
+func (qr *QR) Str2RGB(cstr string) (uint8, uint8, uint8, error) {
 	r, err := strconv.ParseUint(cstr[1:3], 16, 32)
 	if err != nil {
 		log.Error(err)
@@ -132,5 +126,5 @@ func (qr *QR) Str2RGB(cstr string) (uint32, uint32, uint32, error) {
 		log.Error(err)
 		return 0, 0, 0, err
 	}
-	return r, g, b, nil
+	return uint8(r), uint8(g), uint8(b), nil
 }

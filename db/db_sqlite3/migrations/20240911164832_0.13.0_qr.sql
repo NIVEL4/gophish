@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS "qr_conf" (
     "size" integer DEFAULT 256, "pixels" varchar(8) DEFAULT '#000000', "background" varchar(8) DEFAULT '#ffffff'
     );
 
-INSERT INTO "qr_conf" (256, '#000000', '#ffffff');
+INSERT INTO "qr_conf" VALUES (256, '#000000', '#ffffff');
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back

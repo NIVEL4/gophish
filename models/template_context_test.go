@@ -45,7 +45,7 @@ func (s *ModelsSuite) TestNewTemplateContext(c *check.C) {
 	expectedB64FilePath := "./qr-test-data/test-qr-code.b64"
 	expectedB64Bytes, err := os.ReadFile(expectedB64FilePath)
 	if err != nil {
-		cFatalf("Failed to read b64 file: %v", err)
+		c.Fatalf("Failed to read b64 file: %v", err)
 	}
 	expectedB64String := string(expectedB64Bytes)
 
