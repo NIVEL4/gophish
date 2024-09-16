@@ -249,6 +249,15 @@ var api = {
             return query("/imap/validate", "POST", e, true)
         }
     },
+    // QR contains the endpoints for /qrconf
+    QR: {
+        get: function() {
+            return query("/qrconf", "GET", {}, !1)
+        },
+        post: function(e) {
+            return query("/qrconf", "POST", e, !1)
+        }
+    },
     // users contains the endpoints for /users
     users: {
         // get() - Queries the API for GET /users

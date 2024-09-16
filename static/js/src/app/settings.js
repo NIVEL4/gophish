@@ -195,6 +195,26 @@ $(document).ready(function () {
         $("#advancedarea").toggle();
     })
 
+    $("#saveqrsettings").click(function() {
+        qr = {}
+        qr.qr_size = parseInt($("#qr_size").val())
+        qr.qr_pixels = $("#qr_pixels").val()
+        qr.qr_background = $("#qr_background").val()
+
+        api.QR.post(qr).done(function(data) {
+            if (data.success == true) {
+                successFlash(data.message)
+            } else {
+                errorFlash(data.message)
+            }
+        })
+        return false
+    })
+
+    $("#cancelqr").click(function() {
+        loadQRConfigs()
+    })
+
     function loadIMAPSettings(){
         api.IMAP.get()
         .success(function (imap) {
@@ -228,6 +248,18 @@ $(document).ready(function () {
         })
     }
 
+    function loadQRConfigs() {
+        api.QR.get()
+        .success(function (qr) {
+            $("#qr_size").val(qr.qr_size)
+            $("#qr_pixels").val(qr.qr_pixels)
+            $("#qr_background").val(qr.qr_background)
+        })
+        .error(function() {
+            errorFlash("Error fetching QR configs")
+        })
+    }
+
     var use_map = localStorage.getItem('gophish.use_map')
     $("#use_map").prop('checked', JSON.parse(use_map))
     $("#use_map").on('change', function () {
@@ -235,4 +267,5 @@ $(document).ready(function () {
     })
 
     loadIMAPSettings()
+    loadQRConfigs()
 })

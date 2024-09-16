@@ -157,7 +157,7 @@ func generateQRCodeHTML(qr *qrcode.QRCode, qr_conf QR) string {
 
 	// Construct HTML table
 	var html strings.Builder
-	tableOpen := fmt.Sprintf("<table style=\"border-collapse: collapse; border: none; background-color: %s;\">", qr_conf.Background)
+	tableOpen := fmt.Sprintf("<table style=\"border-collapse: collapse; border: none; margin: auto; max-width: %d; background-color: %s;\">", qr_conf.Size, qr_conf.Background)
 	html.WriteString(tableOpen)
 
 	for y := 0; y < qrWidth; y++ {

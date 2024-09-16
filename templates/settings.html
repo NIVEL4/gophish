@@ -246,7 +246,7 @@
             <br>
             <form id="qrSettingsForm">
                 <div class="row">
-                    <label for="qr_height" class="col-sm-4 control-label form-label">QR Size (px):</label>
+                    <label for="qr_size" class="col-sm-4 control-label form-label">QR Size (px):</label>
                     <div class="col-md-2">
                         <input type="number" id="qr_size" name="qr_size" min="64" step="1" value=""
                             class="form-control" />
@@ -270,7 +270,8 @@
                     </div>
                 </div>
                 <br />
-                <button class="btn btn-primary" id ="saveqrsettings" type="button"><i class="fa fa-save"></i> Save</button>
+                <button class="btn btn-primary" id="saveqrsettings" type="button"><i class="fa fa-save"></i> Save</button>
+                <button id="cancelqr" type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
             </form>
         </div>
         <!-- Reporting Settings End -->
