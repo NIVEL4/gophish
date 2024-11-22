@@ -332,18 +332,20 @@ $(document).ready(function () {
             .draw();
     });
     // Handle changing interface type
-    $("#interface_type").onchange = function () {
-        var sender = this.find(":selected").val()
+    $("#interface_type").on('change', function () {
+        var sender = $("#interface_type").find(":selected").val()
         switch (sender) {
             case 'SMTP':
                 document.getElementById('whatsapp-sender').style.display = 'none'
                 document.getElementById('smtp-sender').style.display = ''
+                break;
             case 'Whatsapp': 
-            document.getElementById('whatsapp-sender').style.display = ''
-            document.getElementById('smtp-sender').style.display = 'none'
+                document.getElementById('whatsapp-sender').style.display = ''
+                document.getElementById('smtp-sender').style.display = 'none'
+                break;
             default:
                 console.log(`Invalid interface type ${sender}`)
         }
-    }
+    });
     load()
 })
