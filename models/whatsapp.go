@@ -70,7 +70,7 @@ func (w *Whatsapp) Validate() error {
 
 // validateFromAddress validates
 func ValidateWhatsappNumber(number string) bool {
-	r, _ := regexp.Compile("^[+][0-9]{3}[ ]?([0-9]+(-| )?)+$")
+	r, _ := regexp.Compile("^[+][0-9]{2}[ ]?([0-9]+(-| )?)+$")
 	return r.MatchString(number)
 }
 
