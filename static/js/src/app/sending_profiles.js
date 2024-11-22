@@ -333,7 +333,8 @@ $(document).ready(function () {
     });
     // Handle changing interface type
     $("#interface_type").onchange = function () {
-        switch (this.value) {
+        var sender = this.find(":selected").val()
+        switch (sender) {
             case 'SMTP':
                 document.getElementById('whatsapp-sender').style.display = 'none'
                 document.getElementById('smtp-sender').style.display = ''
@@ -341,7 +342,7 @@ $(document).ready(function () {
             document.getElementById('whatsapp-sender').style.display = ''
             document.getElementById('smtp-sender').style.display = 'none'
             default:
-                console.log('Invalid interface type')
+                console.log(`Invalid interface type ${sender}`)
         }
     }
     load()
