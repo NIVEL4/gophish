@@ -1,8 +1,6 @@
 package models
 
 import (
-	"errors"
-	"regexp"
 	"time"
 
 	"github.com/gophish/gomail"
@@ -34,21 +32,6 @@ type Whatsapp struct {
 	ModifiedDate time.Time `json:"modified_date"`
 }
 
-// ErrNumberNotSpecified is thrown when there is no "Number"
-// specified in the Whatsapp configuration
-var ErrNumberNotSpecified = errors.New("No Number specified")
-
-// ErrInvalidNumber is thrown when the Whatsapp Number field in the sending
-// profiles containes a value that is not a Whatsapp number
-var ErrInvalidNumber = errors.New("Invalid Number because it is not a whatsapp number")
-
-// ErrAuthTokenNotSpecified is thrown when there is no Auth Token specified
-// in the Whatsapp configuration
-var ErrAuthTokenNotSpecified = errors.New("No Auth Token specified")
-
-// ErrInvalidAuthToken indicates that the Auth Token string is invalid
-var ErrInvalidAuthToken = errors.New("Invalid Auth Token")
-
 // TableName specifies the database tablename for Gorm to use
 func (w Whatsapp) TableName() string {
 	return "whatsapp"
@@ -65,12 +48,6 @@ func (w *Whatsapp) Validate() error {
 		return ErrInvalidNumber
 	}
 	return nil
-}
-
-// validateFromAddress validates
-func ValidateWhatsappNumber(number string) bool {
-	r, _ := regexp.Compile("^[+][0-9]{2}[ ]?([0-9]+(-| )?)+$")
-	return r.MatchString(number)
 }
 
 // GetWhatsapps returns the list of Whatsapp owned by the given user.

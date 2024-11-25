@@ -211,14 +211,6 @@ var api = {
             return query("/pages/" + id, "DELETE", {}, false)
         }
     },
-    // sendingProfiles is used to manage all sending profile types
-    sendingProfiles: {
-        get: async function() {
-            smtp_profiles = await api.SMTP.get()
-            wsp_profiles = await api.whatsapp.get()
-            return smtp_profiles.concat(wsp_profiles)
-        }
-    },
     // SMTP contains the endpoints for /smtp
     SMTP: {
         // get() - Queries the API for GET /smtp

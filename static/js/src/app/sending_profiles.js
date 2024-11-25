@@ -63,15 +63,7 @@ function save(idx) {
     profile.auth_token = $("#auth_token").val()
     apiEndpoint = null
     if (idx != -1) {
-        profile.id = profiles[idx].id
-        if (profile.interface_type == 'SMTP') {
-            apiEndpoint = api.SMTPId
-        } else if (profile.interface_type == 'Whatsapp') {
-            apiEndpoint = api.whatsappId
-        } else {
-            modalError("Interface Type unknown")
-        }
-        apiEndpoint.put(profile)
+        api.SMTPId.put(profile)
             .success(function (data) {
                 successFlash("Profile edited successfully!")
                 load()
@@ -82,14 +74,7 @@ function save(idx) {
             })
     } else {
         // Submit the profile
-        if (profile.interface_type == 'SMTP') {
-            apiEndpoint = api.SMTP
-        } else if (profile.interface_type == 'Whatsapp') {
-            apiEndpoint = api.whatsapp
-        } else {
-            modalError("Interface Type unknown")
-        }
-        apiEndpoint.post(profile)
+        api.SMTP.post(profile)
             .success(function (data) {
                 successFlash("Profile added successfully!")
                 load()
@@ -120,7 +105,7 @@ var dismissSendTestEmailModal = function () {
 }
 
 
-var deleteProfile = function (idx, interface_type) {
+var deleteProfile = function (idx) {
     Swal.fire({
         title: "Are you sure?",
         text: "This will delete the sending profile. This can't be undone!",
@@ -132,16 +117,8 @@ var deleteProfile = function (idx, interface_type) {
         reverseButtons: true,
         allowOutsideClick: false,
         preConfirm: function () {
-            apiEndpoint = null
-            if (interface_type == 'SMTP') {
-                apiEndpoint = api.SMTPId
-            } else if (interface_type == 'Whatsapp') {
-                apiEndpoint = api.whatsappId
-            } else {
-                console.log('Unknown interface_type')
-            }
             return new Promise(function (resolve, reject) {
-                apiEndpoint.delete(profiles[idx].id)
+                api.SMTPId.delete(profiles[idx].id)
                     .success(function (msg) {
                         resolve()
                     })
@@ -195,9 +172,10 @@ function edit(idx) {
     } else {
         $("#profileModalLabel").text("New Sending Profile")
     }
+    setProfileEditorFromType()
 }
 
-function copy(idx, interface_type) {
+function copy(idx) {
     $("#modalSubmit").unbind('click').click(function () {
         save(-1)
     })
@@ -212,13 +190,14 @@ function copy(idx, interface_type) {
     $("#ignore_cert_errors").prop("checked", profile.ignore_cert_errors)
     $("#number").val(profile.number)
     $("#auth_token").val(profile.auth_token)
+    setProfileEditorFromType()
 }
 
 function load() {
     $("#profileTable").hide()
     $("#emptyMessage").hide()
     $("#loading").show()
-    api.sendingProfiles.get()
+    api.SMTP.get()
         .then((ss) => function() {
             profiles = ss
             $("#loading").hide()
@@ -238,7 +217,7 @@ function load() {
                         escapeHtml(profile.name),
                         profile.interface_type,
                         moment(profile.modified_date).format('MMMM Do YYYY, h:mm:ss a'),
-                        "<div class='pull-right'><span data-toggle='modal' data-backdrop='static' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Edit Profile' onclick='edit(" + i + ", " + profile.interface_type + ")'>\
+                        "<div class='pull-right'><span data-toggle='modal' data-backdrop='static' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Edit Profile' onclick='edit(" + i + ")'>\
                     <i class='fa fa-pencil'></i>\
                     </button></span>\
 		    <span data-toggle='modal' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Copy Profile' onclick='copy(" + i + ")'>\
@@ -283,6 +262,22 @@ function addCustomHeader(header, value) {
         headersTable.row.add(newRow);
     }
     headersTable.draw();
+}
+
+function setProfileEditorFromType() {
+    sender = $("#interface_type").find(":selected").val()
+    switch (sender) {
+        case 'SMTP':
+            document.getElementById('whatsapp-sender').style.display = 'none'
+            document.getElementById('smtp-sender').style.display = ''
+            break;
+        case 'Whatsapp': 
+            document.getElementById('whatsapp-sender').style.display = ''
+            document.getElementById('smtp-sender').style.display = 'none'
+            break;
+        default:
+            console.log(`Invalid interface type ${sender}`)
+    }
 }
 
 $(document).ready(function () {
@@ -358,19 +353,7 @@ $(document).ready(function () {
     });
     // Handle changing interface type
     $("#interface_type").on('change', function () {
-        var sender = $("#interface_type").find(":selected").val()
-        switch (sender) {
-            case 'SMTP':
-                document.getElementById('whatsapp-sender').style.display = 'none'
-                document.getElementById('smtp-sender').style.display = ''
-                break;
-            case 'Whatsapp': 
-                document.getElementById('whatsapp-sender').style.display = ''
-                document.getElementById('smtp-sender').style.display = 'none'
-                break;
-            default:
-                console.log(`Invalid interface type ${sender}`)
-        }
+        setProfileEditorFromType()
     });
     load()
 })

@@ -42,6 +42,8 @@ type SMTP struct {
 	FromAddress      string    `json:"from_address"`
 	IgnoreCertErrors bool      `json:"ignore_cert_errors"`
 	Headers          []Header  `json:"headers"`
+	Number           string    `json:"number"`
+	AuthToken        string    `json:"auth_token"`
 	ModifiedDate     time.Time `json:"modified_date"`
 }
 
@@ -53,6 +55,12 @@ type Header struct {
 	Key    string `json:"key"`
 	Value  string `json:"value"`
 }
+
+var AcceptedInterfaceTypes = []string{"SMTP", "Whatsapp"}
+
+// ErrInvalidInterfaceType is thrown when the Interface does not have a
+// valid value. Possible values listed in var AcceptedInterfaceTypes
+var ErrInvalidInterfaceType = errors.New("Invalid Interface Type")
 
 // ErrFromAddressNotSpecified is thrown when there is no "From" address
 // specified in the SMTP configuration
@@ -69,43 +77,88 @@ var ErrHostNotSpecified = errors.New("No SMTP Host specified")
 // ErrInvalidHost indicates that the SMTP server string is invalid
 var ErrInvalidHost = errors.New("Invalid SMTP server address")
 
+// ErrNumberNotSpecified is thrown when there is no "Number"
+// specified in the Whatsapp configuration
+var ErrNumberNotSpecified = errors.New("No Number specified")
+
+// ErrInvalidNumber is thrown when the Whatsapp Number field in the sending
+// profiles containes a value that is not a Whatsapp number
+var ErrInvalidNumber = errors.New("Invalid Number because it is not a whatsapp number")
+
+// ErrAuthTokenNotSpecified is thrown when there is no Auth Token specified
+// in the Whatsapp configuration
+var ErrAuthTokenNotSpecified = errors.New("No Auth Token specified")
+
+// ErrInvalidAuthToken indicates that the Auth Token string is invalid
+var ErrInvalidAuthToken = errors.New("Invalid Auth Token")
+
 // TableName specifies the database tablename for Gorm to use
 func (s SMTP) TableName() string {
 	return "smtp"
 }
 
+func stringInSlice(str string, list []string) bool {
+	for _, b := range list {
+		if b == str {
+			return true
+		}
+	}
+	return false
+}
+
 // Validate ensures that SMTP configs/connections are valid
 func (s *SMTP) Validate() error {
-	switch {
-	case s.FromAddress == "":
-		return ErrFromAddressNotSpecified
-	case s.Host == "":
-		return ErrHostNotSpecified
-	case !validateFromAddress(s.FromAddress):
-		return ErrInvalidFromAddress
+	if !stringInSlice(s.Interface, AcceptedInterfaceTypes) {
+		return ErrInvalidInterfaceType
 	}
-	_, err := mail.ParseAddress(s.FromAddress)
-	if err != nil {
+	if s.Interface == "SMTP" {
+		switch {
+		case s.FromAddress == "":
+			return ErrFromAddressNotSpecified
+		case s.Host == "":
+			return ErrHostNotSpecified
+		case !validateFromAddress(s.FromAddress):
+			return ErrInvalidFromAddress
+		}
+		_, err := mail.ParseAddress(s.FromAddress)
+		if err != nil {
+			return err
+		}
+		// Make sure addr is in host:port format
+		hp := strings.Split(s.Host, ":")
+		if len(hp) > 2 {
+			return ErrInvalidHost
+		} else if len(hp) < 2 {
+			hp = append(hp, "25")
+		}
+		_, err = strconv.Atoi(hp[1])
+		if err != nil {
+			return ErrInvalidHost
+		}
 		return err
+	} else if s.Interface == "Whatsapp" {
+		switch {
+		case s.Number == "":
+			return ErrNumberNotSpecified
+		case s.AuthToken == "":
+			return ErrAuthTokenNotSpecified
+		case !ValidateWhatsappNumber(s.Number):
+			return ErrInvalidNumber
+		}
 	}
-	// Make sure addr is in host:port format
-	hp := strings.Split(s.Host, ":")
-	if len(hp) > 2 {
-		return ErrInvalidHost
-	} else if len(hp) < 2 {
-		hp = append(hp, "25")
-	}
-	_, err = strconv.Atoi(hp[1])
-	if err != nil {
-		return ErrInvalidHost
-	}
-	return err
+	return nil
 }
 
 // validateFromAddress validates
 func validateFromAddress(email string) bool {
-	r, _ := regexp.Compile("^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,18})$")
-	return r.MatchString(email)
+	email_regex, _ := regexp.Compile("^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,18})$")
+	return email_regex.MatchString(email)
+}
+
+// validateFromAddress validates phone number format
+func ValidateWhatsappNumber(number string) bool {
+	r, _ := regexp.Compile("^[+][0-9]{2}[ ]?([0-9]+(-| )?)+$")
+	return r.MatchString(number)
 }
 
 // GetDialer returns a dialer for the given SMTP profile
