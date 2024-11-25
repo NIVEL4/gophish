@@ -13,7 +13,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// SendingProfiles handles requests for the /api/whatsapp/ endpoint
+// WhatsappProfiles handles requests for the /api/whatsapp/ endpoint
 func (as *Server) WhatsappProfiles(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == "GET":
@@ -49,7 +49,7 @@ func (as *Server) WhatsappProfiles(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// SendingProfile contains functions to handle the GET'ing, DELETE'ing, and PUT'ing
+// WhatsappProfile contains functions to handle the GET'ing, DELETE'ing, and PUT'ing
 // of a Whatsapp object
 func (as *Server) WhatsappProfile(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)

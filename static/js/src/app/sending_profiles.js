@@ -206,7 +206,7 @@ function load() {
     $("#profileTable").hide()
     $("#emptyMessage").hide()
     $("#loading").show()
-    api.SMTP.get()
+    api.sendingProfiles.get()
         .success(function (ss) {
             profiles = ss
             $("#loading").hide()
