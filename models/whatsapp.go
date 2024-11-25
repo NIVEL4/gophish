@@ -83,7 +83,7 @@ func GetWhatsapps(uid int64) ([]Whatsapp, error) {
 		return ws, err
 	}
 	for i := range ws {
-		err = db.Where("whatsapp_id=?", ws[i].Id).Error
+		err = db.Where("whatsapp_id=?", ws[i].Id).Find(&ws).Error
 		if err != nil && err != gorm.ErrRecordNotFound {
 			log.Error(err)
 			return ws, err
@@ -100,7 +100,7 @@ func GetWhatsapp(id int64, uid int64) (Whatsapp, error) {
 		log.Error(err)
 		return w, err
 	}
-	err = db.Where("whatsapp_id=?", w.Id).Error
+	err = db.Where("whatsapp_id=?", w.Id).Find(&w).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Error(err)
 		return w, err
@@ -111,12 +111,12 @@ func GetWhatsapp(id int64, uid int64) (Whatsapp, error) {
 // GetWhatsappByName returns the Whatsapp, if it exists, specified by the given name and user_id.
 func GetWhatsappByName(n string, uid int64) (Whatsapp, error) {
 	w := Whatsapp{}
-	err := db.Where("user_id=? and name=?", uid, n).Error
+	err := db.Where("user_id=? and name=?", uid, n).Find(&w).Error
 	if err != nil {
 		log.Error(err)
 		return w, err
 	}
-	err = db.Where("whatsapp_id=?", w.Id).Error
+	err = db.Where("whatsapp_id=?", w.Id).Find(&w).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Error(err)
 	}
