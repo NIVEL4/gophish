@@ -134,7 +134,6 @@ func (as *AdminServer) registerRoutes() {
 	router.HandleFunc("/landing_pages", mid.Use(as.LandingPages, mid.RequireLogin))
 	router.HandleFunc("/sending_profiles", mid.Use(as.SendingProfiles, mid.RequireLogin))
 	router.HandleFunc("/settings", mid.Use(as.Settings, mid.RequireLogin))
-	router.HandleFunc("/whatsapp", mid.Use(as.Whatsapp, mid.RequireLogin))
 	router.HandleFunc("/users", mid.Use(as.UserManagement, mid.RequirePermission(models.PermissionModifySystem), mid.RequireLogin))
 	router.HandleFunc("/webhooks", mid.Use(as.Webhooks, mid.RequirePermission(models.PermissionModifySystem), mid.RequireLogin))
 	router.HandleFunc("/impersonate", mid.Use(as.Impersonate, mid.RequirePermission(models.PermissionModifySystem), mid.RequireLogin))
@@ -285,13 +284,6 @@ func (as *AdminServer) Settings(w http.ResponseWriter, r *http.Request) {
 		}
 		api.JSONResponse(w, msg, http.StatusOK)
 	}
-}
-
-// Whatsapp is an admin-only handler for whatsapp messages
-func (as *AdminServer) Whatsapp(w http.ResponseWriter, r *http.Request) {
-	params := newTemplateParams(r)
-	params.Title = "Whatsapp"
-	getTemplate(w, "whatsapp").ExecuteTemplate(w, "base", params)
 }
 
 // UserManagement is an admin-only handler that allows for the registration
