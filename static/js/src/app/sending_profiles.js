@@ -120,7 +120,7 @@ var dismissSendTestEmailModal = function () {
 }
 
 
-var deleteProfile = function (idx) {
+var deleteProfile = function (idx, interface_type) {
     Swal.fire({
         title: "Are you sure?",
         text: "This will delete the sending profile. This can't be undone!",
@@ -132,8 +132,16 @@ var deleteProfile = function (idx) {
         reverseButtons: true,
         allowOutsideClick: false,
         preConfirm: function () {
+            apiEndpoint = null
+            if (interface_type == 'SMTP') {
+                apiEndpoint = api.SMTPId
+            } else if (interface_type == 'Whatsapp') {
+                apiEndpoint = api.whatsappId
+            } else {
+                console.log('Unknown interface_type')
+            }
             return new Promise(function (resolve, reject) {
-                api.SMTPId.delete(profiles[idx].id)
+                apiEndpoint.delete(profiles[idx].id)
                     .success(function (msg) {
                         resolve()
                     })
@@ -182,12 +190,14 @@ function edit(idx) {
         $.each(profile.headers, function (i, record) {
             addCustomHeader(record.key, record.value)
         });
+        $("#number").val(profile.number)
+        $("#auth_token").val(profile.auth_token)
     } else {
         $("#profileModalLabel").text("New Sending Profile")
     }
 }
 
-function copy(idx) {
+function copy(idx, interface_type) {
     $("#modalSubmit").unbind('click').click(function () {
         save(-1)
     })
@@ -200,6 +210,8 @@ function copy(idx) {
     $("#username").val(profile.username)
     $("#password").val(profile.password)
     $("#ignore_cert_errors").prop("checked", profile.ignore_cert_errors)
+    $("#number").val(profile.number)
+    $("#auth_token").val(profile.auth_token)
 }
 
 function load() {
@@ -207,7 +219,7 @@ function load() {
     $("#emptyMessage").hide()
     $("#loading").show()
     api.sendingProfiles.get()
-        .success(function (ss) {
+        .then((ss) => function() {
             profiles = ss
             $("#loading").hide()
             if (profiles.length > 0) {
@@ -226,7 +238,7 @@ function load() {
                         escapeHtml(profile.name),
                         profile.interface_type,
                         moment(profile.modified_date).format('MMMM Do YYYY, h:mm:ss a'),
-                        "<div class='pull-right'><span data-toggle='modal' data-backdrop='static' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Edit Profile' onclick='edit(" + i + ")'>\
+                        "<div class='pull-right'><span data-toggle='modal' data-backdrop='static' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Edit Profile' onclick='edit(" + i + ", " + profile.interface_type + ")'>\
                     <i class='fa fa-pencil'></i>\
                     </button></span>\
 		    <span data-toggle='modal' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Copy Profile' onclick='copy(" + i + ")'>\
@@ -242,11 +254,7 @@ function load() {
             } else {
                 $("#emptyMessage").show()
             }
-        })
-        .error(function () {
-            $("#loading").hide()
-            errorFlash("Error fetching profiles")
-        })
+        }())
 }
 
 function addCustomHeader(header, value) {
