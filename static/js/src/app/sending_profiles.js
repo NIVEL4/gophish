@@ -59,9 +59,19 @@ function save(idx) {
     profile.username = $("#username").val()
     profile.password = $("#password").val()
     profile.ignore_cert_errors = $("#ignore_cert_errors").prop("checked")
+    profile.number = $("#number").val()
+    profile.auth_token = $("#auth_token").val()
+    apiEndpoint = null
     if (idx != -1) {
         profile.id = profiles[idx].id
-        api.SMTPId.put(profile)
+        if (profile.interface_type == 'SMTP') {
+            apiEndpoint = api.SMTPId
+        } else if (profile.interface_type == 'Whatsapp') {
+            apiEndpoint = api.whatsappId
+        } else {
+            modalError("Interface Type unknown")
+        }
+        apiEndpoint.put(profile)
             .success(function (data) {
                 successFlash("Profile edited successfully!")
                 load()
@@ -72,7 +82,14 @@ function save(idx) {
             })
     } else {
         // Submit the profile
-        api.SMTP.post(profile)
+        if (profile.interface_type == 'SMTP') {
+            apiEndpoint = api.SMTP
+        } else if (profile.interface_type == 'Whatsapp') {
+            apiEndpoint = api.whatsapp
+        } else {
+            modalError("Interface Type unknown")
+        }
+        apiEndpoint.post(profile)
             .success(function (data) {
                 successFlash("Profile added successfully!")
                 load()
