@@ -61,8 +61,8 @@ function save(idx) {
     profile.ignore_cert_errors = $("#ignore_cert_errors").prop("checked")
     profile.number = $("#number").val()
     profile.auth_token = $("#auth_token").val()
-    apiEndpoint = null
     if (idx != -1) {
+        profile.id = profiles[idx].id
         api.SMTPId.put(profile)
             .success(function (data) {
                 successFlash("Profile edited successfully!")
@@ -96,6 +96,8 @@ function dismiss() {
     $("#password").val("")
     $("#ignore_cert_errors").prop("checked", true)
     $("#headersTable").dataTable().DataTable().clear().draw()
+    $("#number").val("")
+    $("#auth_token").val("")
     $("#modal").modal('hide')
 }
 

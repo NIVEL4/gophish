@@ -306,25 +306,6 @@ var api = {
             return query("/webhooks/" + id + "/validate", "POST", {}, true)
         },
     },
-    whatsapp: {
-        get: function() {
-            return query("/whatsapp/", "GET", {}, false)
-        },
-        post: function(whatsapp) {
-            return query("/whatsapp/", "POST", whatsapp, false)
-        }
-    }, 
-    whatsappId: {
-        get: function(id) {
-            return query("/whatsapp/" + id, "GET", {}, false)
-        },
-        put: function(whatsapp) {
-            return query("/whatsapp/" + whatsapp.id, "PUT", whatsapp, true)
-        }, 
-        delete: function(id) {
-            return query("/whatsapp/" + id, "DELETE", {}, false)
-        }
-    },
     // import handles all of the "import" functions in the api
     import_email: function (req) {
         return query("/import/email", "POST", req, false)
