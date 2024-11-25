@@ -8,7 +8,6 @@ import (
 	"github.com/gophish/gomail"
 	log "github.com/gophish/gophish/logger"
 	"github.com/gophish/gophish/mailer"
-	"github.com/jinzhu/gorm"
 )
 
 // Dialer is a wrapper around a standard gomail.Dialer in order
@@ -82,13 +81,6 @@ func GetWhatsapps(uid int64) ([]Whatsapp, error) {
 		log.Error(err)
 		return ws, err
 	}
-	for i := range ws {
-		err = db.Where("whatsapp_id=?", ws[i].Id).Find(&ws).Error
-		if err != nil && err != gorm.ErrRecordNotFound {
-			log.Error(err)
-			return ws, err
-		}
-	}
 	return ws, nil
 }
 
@@ -97,11 +89,6 @@ func GetWhatsapp(id int64, uid int64) (Whatsapp, error) {
 	w := Whatsapp{}
 	err := db.Where("user_id=? and id=?", uid, id).Find(&w).Error
 	if err != nil {
-		log.Error(err)
-		return w, err
-	}
-	err = db.Where("whatsapp_id=?", w.Id).Find(&w).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Error(err)
 		return w, err
 	}
@@ -115,10 +102,6 @@ func GetWhatsappByName(n string, uid int64) (Whatsapp, error) {
 	if err != nil {
 		log.Error(err)
 		return w, err
-	}
-	err = db.Where("whatsapp_id=?", w.Id).Find(&w).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		log.Error(err)
 	}
 	return w, err
 }

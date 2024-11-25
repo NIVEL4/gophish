@@ -213,9 +213,9 @@ var api = {
     },
     // sendingProfiles is used to manage all sending profile types
     sendingProfiles: {
-        get: function() {
-            smtp_profiles = api.SMTP.get()
-            wsp_profiles = api.whatsapp.get()
+        get: async function() {
+            smtp_profiles = await api.SMTP.get()
+            wsp_profiles = await api.whatsapp.get()
             return smtp_profiles.concat(wsp_profiles)
         }
     },
