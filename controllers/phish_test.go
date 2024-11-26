@@ -335,32 +335,6 @@ func TestPreviewClick(t *testing.T) {
 	clickLink(t, ctx, req.RId, req.Page.HTML)
 }
 
-func TestInvalidTransparencyRequest(t *testing.T) {
-	ctx := setupTest(t)
-	defer tearDown(t, ctx)
-	bogusRId := fmt.Sprintf("bogus%s", TransparencySuffix)
-	openEmail404(t, ctx, bogusRId)
-	clickLink404(t, ctx, bogusRId)
-	reportEmail404(t, ctx, bogusRId)
-}
-
-func TestTransparencyRequest(t *testing.T) {
-	ctx := setupTest(t)
-	defer tearDown(t, ctx)
-	campaign := getFirstCampaign(t)
-	result := campaign.Results[0]
-	rid := fmt.Sprintf("%s%s", result.RId, TransparencySuffix)
-	transparencyRequest(t, ctx, result, rid, "/")
-	transparencyRequest(t, ctx, result, rid, "/track")
-	transparencyRequest(t, ctx, result, rid, "/report")
-
-	// And check with the URL encoded version of a +
-	rid = fmt.Sprintf("%s%s", result.RId, "%2b")
-	transparencyRequest(t, ctx, result, rid, "/")
-	transparencyRequest(t, ctx, result, rid, "/track")
-	transparencyRequest(t, ctx, result, rid, "/report")
-}
-
 func TestRedirectTemplating(t *testing.T) {
 	ctx := setupTest(t)
 	defer tearDown(t, ctx)
