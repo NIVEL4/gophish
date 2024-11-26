@@ -42,7 +42,7 @@ type SMTP struct {
 	FromAddress      string    `json:"from_address"`
 	IgnoreCertErrors bool      `json:"ignore_cert_errors"`
 	Headers          []Header  `json:"headers"`
-	Number           string    `json:"number"`
+	NumberId         string    `json:"number_id"`
 	AuthToken        string    `json:"auth_token"`
 	ModifiedDate     time.Time `json:"modified_date"`
 }
@@ -79,7 +79,7 @@ var ErrInvalidHost = errors.New("Invalid SMTP server address")
 
 // ErrNumberNotSpecified is thrown when there is no "Number"
 // specified in the Whatsapp configuration
-var ErrNumberNotSpecified = errors.New("No Number specified")
+var ErrNumberIDNotSpecified = errors.New("No NumberID specified")
 
 // ErrInvalidNumber is thrown when the Whatsapp Number field in the sending
 // profiles containes a value that is not a Whatsapp number
@@ -138,11 +138,11 @@ func (s *SMTP) Validate() error {
 		return err
 	} else if s.Interface == "Whatsapp" {
 		switch {
-		case s.Number == "":
-			return ErrNumberNotSpecified
+		case s.NumberId == "":
+			return ErrNumberIDNotSpecified
 		case s.AuthToken == "":
 			return ErrAuthTokenNotSpecified
-		case !ValidateWhatsappNumber(s.Number):
+		case !ValidateWhatsappNumberId(s.NumberId):
 			return ErrInvalidNumber
 		}
 	}
@@ -156,8 +156,8 @@ func validateFromAddress(email string) bool {
 }
 
 // validateFromAddress validates phone number format
-func ValidateWhatsappNumber(number string) bool {
-	r, _ := regexp.Compile("^[+][0-9]{2}[ ]?([0-9]+(-| )?)+$")
+func ValidateWhatsappNumberId(number string) bool {
+	r, _ := regexp.Compile("^[0-9]{14-17}$")
 	return r.MatchString(number)
 }
 
