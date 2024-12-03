@@ -4,7 +4,7 @@
 DROP TABLE "whatsapp";
 
 ALTER TABLE "smtp" 
-ADD COLUMN number varchar(64);
+ADD COLUMN number_id varchar(64);
 
 ALTER TABLE "smtp"
 ADD COLUMN auth_token varchar(255);
