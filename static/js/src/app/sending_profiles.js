@@ -169,7 +169,7 @@ function edit(idx) {
         $.each(profile.headers, function (i, record) {
             addCustomHeader(record.key, record.value)
         });
-        $("#number").val(profile.number)
+        $("#number_id").val(profile.number_id)
         $("#auth_token").val(profile.auth_token)
     } else {
         $("#profileModalLabel").text("New Sending Profile")
@@ -190,7 +190,7 @@ function copy(idx) {
     $("#username").val(profile.username)
     $("#password").val(profile.password)
     $("#ignore_cert_errors").prop("checked", profile.ignore_cert_errors)
-    $("#number").val(profile.number)
+    $("#number_id").val(profile.number_id)
     $("#auth_token").val(profile.auth_token)
     setProfileEditorFromType()
 }

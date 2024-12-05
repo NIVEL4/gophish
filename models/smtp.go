@@ -157,7 +157,7 @@ func validateFromAddress(email string) bool {
 
 // validateFromAddress validates phone number format
 func ValidateWhatsappNumberId(number string) bool {
-	r, _ := regexp.Compile("^[0-9]{14-17}$")
+	r, _ := regexp.Compile(`\d*`)
 	return r.MatchString(number)
 }
 
