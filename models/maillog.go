@@ -163,6 +163,48 @@ func (m *MailLog) GetSmtpFrom() (string, error) {
 	return f.Address, err
 }
 
+func (m *MailLog) GetNumberId() (string, error) {
+	c, err := GetCampaign(m.CampaignId, m.UserId)
+	if err != nil {
+		return "", err
+	}
+
+	return c.SMTP.NumberId, nil
+}
+
+func (m *MailLog) GetDestNumber() (string, error) {
+	r, err := GetResult(m.RId)
+	if err != nil {
+		return "", err
+	}
+	return r.PhoneNumber, nil
+}
+
+func (m *MailLog) GenerateMessage() ([]byte, error) {
+	r, err := GetResult(m.RId)
+	if err != nil {
+		return nil, err
+	}
+	c := m.cachedCampaign
+	if c == nil {
+		campaign, err := GetCampaignMailContext(m.CampaignId, m.UserId)
+		if err != nil {
+			return nil, err
+		}
+		c = &campaign
+	}
+
+	ptx, err := NewPhishingTemplateContext(c, r.BaseRecipient, r.RId)
+	if err != nil {
+		return nil, err
+	}
+	msg, err := ExecuteTemplate(c.Template.Text, ptx)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(msg), nil
+}
+
 // Generate fills in the details of a gomail.Message instance with
 // the correct headers and body from the campaign and recipient listed in
 // the maillog. We accept the gomail.Message as an argument so that the caller
