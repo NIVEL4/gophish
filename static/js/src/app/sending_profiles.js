@@ -59,7 +59,7 @@ function save(idx) {
     profile.username = $("#username").val()
     profile.password = $("#password").val()
     profile.ignore_cert_errors = $("#ignore_cert_errors").prop("checked")
-    profile.number = $("#number").val()
+    profile.number_id = $("#number_id").val()
     profile.auth_token = $("#auth_token").val()
     if (idx != -1) {
         profile.id = profiles[idx].id
@@ -96,7 +96,7 @@ function dismiss() {
     $("#password").val("")
     $("#ignore_cert_errors").prop("checked", true)
     $("#headersTable").dataTable().DataTable().clear().draw()
-    $("#number").val("")
+    $("#number_id").val("")
     $("#auth_token").val("")
     $("#modal").modal('hide')
 }
