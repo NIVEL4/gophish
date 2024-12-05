@@ -26,6 +26,7 @@ function instantiateDataTable(id) {
             { data: 'first_name', render: escapeHtml},
             { data: 'last_name', render: escapeHtml },
             { data: 'email', render: escapeHtml },
+            { data: 'phone_number', render: escapeHtml },
             { data: 'position',  render: escapeHtml },
             { data: null,
                 render: function ( data, type, row ) {
@@ -121,6 +122,7 @@ var downloadCSVTemplate = function () {
         'First Name': 'Example',
         'Last Name': 'User',
         'Email': 'foobar@example.com',
+        'Phone Number': '+56 9 9999 9999',
         'Position': 'Systems Administrator'
     }]
     var filename = 'group_template.csv'
@@ -183,12 +185,13 @@ var deleteGroup = function (id) {
     })
 }
 
-function addTarget(firstNameInput, lastNameInput, emailInput, positionInput) {
+function addTarget(firstNameInput, lastNameInput, emailInput, phoneInput, positionInput) {
 
     $("#modal\\.flashes").empty()
     groupId = $("#groupid").val()
     target = {
         "email": emailInput.toLowerCase(),
+        "phone_number": phoneInput,
         "first_name": firstNameInput,
         "last_name": lastNameInput,
         "position": positionInput
@@ -296,6 +299,7 @@ $(document).ready(function () {
             $("#firstName").val(),
             $("#lastName").val(),
             $("#email").val(),
+            $("#phoneNumber").val(),
             $("#position").val());
 
         $('#targetsTable').DataTable().draw();
