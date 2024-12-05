@@ -440,9 +440,10 @@ func insertTargetIntoGroup(tx *gorm.DB, t Target, gid int64) error {
 // UpdateTarget updates the given target information in the database.
 func UpdateTarget(tx *gorm.DB, target Target) error {
 	targetInfo := map[string]interface{}{
-		"first_name": target.FirstName,
-		"last_name":  target.LastName,
-		"position":   target.Position,
+		"phone_number": target.PhoneNumber,
+		"first_name":   target.FirstName,
+		"last_name":    target.LastName,
+		"position":     target.Position,
 	}
 	err := tx.Model(&target).Where("id = ?", target.Id).Updates(targetInfo).Error
 	if err != nil {
@@ -456,7 +457,7 @@ func UpdateTarget(tx *gorm.DB, target Target) error {
 // GetTargets performs a many-to-many select to get all the Targets for a Group
 func GetTargets(gid int64) ([]Target, error) {
 	ts := []Target{}
-	err := db.Table("targets").Select("targets.id, targets.email, targets.first_name, targets.last_name, targets.position").Joins("left join group_targets gt ON targets.id = gt.target_id").Where("gt.group_id=?", gid).Scan(&ts).Error
+	err := db.Table("targets").Select("targets.id, targets.email, targets.phone_number, targets.first_name, targets.last_name, targets.position").Joins("left join group_targets gt ON targets.id = gt.target_id").Where("gt.group_id=?", gid).Scan(&ts).Error
 	return ts, err
 }
 
@@ -487,12 +488,12 @@ func GetDataTable(gid int64, start int64, length int64, search string, order str
 		search = "%" + search + "%"
 
 		// 2.1 Apply search filter
-		err = db.Order(order).Table("targets").Select("targets.id, targets.email, targets.first_name, targets.last_name, targets.position").Joins("left join group_targets gt ON targets.id = gt.target_id").Where("gt.group_id=?", gid).Where("targets.first_name LIKE ? OR targets.last_name LIKE ? OR targets.email LIKE ? or targets.position LIKE ?", search, search, search, search).Count(&count).Offset(start).Limit(length).Scan(&ts).Error
+		err = db.Order(order).Table("targets").Select("targets.id, targets.email, targets.phone_number, targets.first_name, targets.last_name, targets.position").Joins("left join group_targets gt ON targets.id = gt.target_id").Where("gt.group_id=?", gid).Where("targets.first_name LIKE ? OR targets.last_name LIKE ? OR targets.email LIKE ? OR targets.phone_number LIKE ? OR targets.position LIKE ?", search, search, search, search, search).Count(&count).Offset(start).Limit(length).Scan(&ts).Error
 
 		dt.RecordsFiltered = count // The number of results from applying the search filter (calculated before trimming down the results with offset and limit)
 
 	} else {
-		err = db.Order(order).Table("targets").Select("targets.id, targets.email, targets.first_name, targets.last_name, targets.position").Joins("left join group_targets gt ON targets.id = gt.target_id").Where("gt.group_id=?", gid).Offset(start).Limit(length).Scan(&ts).Error
+		err = db.Order(order).Table("targets").Select("targets.id, targets.email, targets.phone_number, targets.first_name, targets.last_name, targets.position").Joins("left join group_targets gt ON targets.id = gt.target_id").Where("gt.group_id=?", gid).Offset(start).Limit(length).Scan(&ts).Error
 		dt.RecordsFiltered = dt.RecordsTotal
 	}
 
@@ -508,7 +509,7 @@ func GetDataTable(gid int64, start int64, length int64, search string, order str
 // GetTargetByEmail gets a single target from a group by email address and group id
 func GetTargetByEmail(gid int64, email string) ([]Target, error) {
 	ts := []Target{}
-	err := db.Table("targets").Select("targets.id, targets.email, targets.first_name, targets.last_name, targets.position").Joins("left join group_targets gt ON targets.id = gt.target_id").Where("gt.group_id=?", gid).Where("targets.email=?", email).First(&ts).Error
+	err := db.Table("targets").Select("targets.id, targets.email, targets.phone_number, targets.first_name, targets.last_name, targets.position").Joins("left join group_targets gt ON targets.id = gt.target_id").Where("gt.group_id=?", gid).Where("targets.email=?", email).First(&ts).Error
 	return ts, err
 }
 

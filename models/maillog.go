@@ -163,6 +163,14 @@ func (m *MailLog) GetSmtpFrom() (string, error) {
 	return f.Address, err
 }
 
+func (m *MailLog) GetAuthToken() (string, error) {
+	c, err := GetCampaign(m.CampaignId, m.UserId)
+	if err != nil {
+		return "", err
+	}
+	return c.SMTP.AuthToken, nil
+}
+
 func (m *MailLog) GetNumberId() (string, error) {
 	c, err := GetCampaign(m.CampaignId, m.UserId)
 	if err != nil {

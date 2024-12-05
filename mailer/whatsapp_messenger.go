@@ -49,6 +49,7 @@ type Message interface {
 	Backoff(reason error) error
 	Error(err error) error
 	Success() error
+	GetAuthToken() (string, error)
 	GetNumberId() (string, error)
 	GenerateMessage() ([]byte, error)
 	GetDestNumber() (string, error)
@@ -101,6 +102,7 @@ func errorMessage(err error, ms []Message) {
 // If the context is cancelled before all of the messages are sent,
 // sendMessage just returns and does not modify those messages.
 func sendMessage(ctx context.Context, ms []Message) {
+	httpClient := &http.Client{}
 	for _, m := range ms {
 		select {
 		case <-ctx.Done():
@@ -129,7 +131,31 @@ func sendMessage(ctx context.Context, ms []Message) {
 			continue
 		}
 
-		resp_obj, err := http.NewRequest("POST", WhatsappAPIEndpoint, bytes.NewBuffer(RequestBody))
+		req, err := http.NewRequest("POST", WhatsappAPIEndpoint, bytes.NewBuffer(RequestBody))
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"code":   "unknown",
+				"number": dest_number,
+			}).Warn(err)
+			errorMessage(err, ms)
+			m.Backoff(err)
+			continue
+		}
+
+		auth_token, err := m.GetAuthToken()
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"code":   "unknown",
+				"number": dest_number,
+			}).Warn(err)
+			errorMessage(err, ms)
+			m.Backoff(err)
+			continue
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", auth_token))
+		resp_obj, err := httpClient.Do(req)
 
 		if err != nil {
 			log.WithFields(logrus.Fields{
