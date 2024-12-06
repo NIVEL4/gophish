@@ -44,14 +44,19 @@ var TEMPLATE_TAGS = [{
         description: 'The base URL with the path and rid parameter stripped. Useful for making links to static files.'
     },
     {
-	id: 10,
-	name: 'QrCodeHTML',
-	description: 'Generates an HTML based QR for the URL.'
+        id: 10,
+        name: 'QrCodeHTML',
+        description: 'Generates an HTML based QR for the URL.'
     },
     {
-	id: 11,
-	name: 'QrCodeB64',
-	description: 'Generates a base64 encoded PNG image of a QR code for the URL. Not suitable for Gmail.'
+        id: 11,
+        name: 'QrCodeB64',
+        description: 'Generates a base64 encoded PNG image of a QR code for the URL. Not suitable for Gmail.'
+    },
+    {
+        id: 12,
+        name: 'PhoneNumber', 
+        description: 'The recipient\'s phone number.'
     }
 ];
 

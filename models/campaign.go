@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"time"
 
@@ -457,6 +458,7 @@ func GetQueuedCampaigns(t time.Time) ([]Campaign, error) {
 
 // PostCampaign inserts a campaign and all associated records into the database.
 func PostCampaign(c *Campaign, uid int64) error {
+	log.Info("Validating new campaign")
 	err := c.Validate()
 	if err != nil {
 		return err
@@ -466,6 +468,7 @@ func PostCampaign(c *Campaign, uid int64) error {
 	c.CreatedDate = time.Now().UTC()
 	c.CompletedDate = time.Time{}
 	c.Status = CampaignQueued
+	log.Info("Managing launch date for new campaign")
 	if c.LaunchDate.IsZero() {
 		c.LaunchDate = c.CreatedDate
 	} else {
@@ -480,6 +483,7 @@ func PostCampaign(c *Campaign, uid int64) error {
 	// Check to make sure all the groups already exist
 	// Also, later we'll need to know the total number of recipients (counting
 	// duplicates is ok for now), so we'll do that here to save a loop.
+	log.Info("Revieweing target groups for new campaign")
 	totalRecipients := 0
 	for i, g := range c.Groups {
 		c.Groups[i], err = GetGroupByName(g.Name, uid)
@@ -495,6 +499,7 @@ func PostCampaign(c *Campaign, uid int64) error {
 		totalRecipients += len(c.Groups[i].Targets)
 	}
 	// Check to make sure the template exists
+	log.Info("Revieweing template for new campaign")
 	t, err := GetTemplateByName(c.Template.Name, uid)
 	if err == gorm.ErrRecordNotFound {
 		log.WithFields(logrus.Fields{
@@ -508,6 +513,7 @@ func PostCampaign(c *Campaign, uid int64) error {
 	c.Template = t
 	c.TemplateId = t.Id
 	// Check to make sure the page exists
+	log.Info("Revieweing landing page for new campaign")
 	p, err := GetPageByName(c.Page.Name, uid)
 	if err == gorm.ErrRecordNotFound {
 		log.WithFields(logrus.Fields{
@@ -521,6 +527,7 @@ func PostCampaign(c *Campaign, uid int64) error {
 	c.Page = p
 	c.PageId = p.Id
 	// Check to make sure the sending profile exists
+	log.Info("Revieweing sending profile for new campaign")
 	s, err := GetSMTPByName(c.SMTP.Name, uid)
 	if err == gorm.ErrRecordNotFound {
 		log.WithFields(logrus.Fields{
@@ -539,6 +546,7 @@ func PostCampaign(c *Campaign, uid int64) error {
 		log.Error(err)
 		return err
 	}
+	log.Info(fmt.Sprintf("Saved new campaign with ID %d", c.Id))
 	if !c.IsTest {
 		err = AddEvent(&Event{Message: "Campaign Created"}, c.Id)
 		if err != nil {
@@ -546,11 +554,13 @@ func PostCampaign(c *Campaign, uid int64) error {
 		}
 	}
 	// Insert all the results
+	log.Info(fmt.Sprintf("Queuing messages for campaign %d", c.Id))
 	resultMap := make(map[string]bool)
 	recipientIndex := 0
 	tx := db.Begin()
 	for _, g := range c.Groups {
 		// Insert a result for each target in the group
+		log.Info(fmt.Sprintf("Iterating over group %s for launching campaign %d", g.Name, c.Id))
 		for _, t := range g.Targets {
 			// Remove duplicate results - we should only
 			// send emails to unique email addresses.
@@ -561,10 +571,11 @@ func PostCampaign(c *Campaign, uid int64) error {
 			sendDate := c.generateSendDate(recipientIndex, totalRecipients)
 			r := &Result{
 				BaseRecipient: BaseRecipient{
-					Email:     t.Email,
-					Position:  t.Position,
-					FirstName: t.FirstName,
-					LastName:  t.LastName,
+					Email:       t.Email,
+					PhoneNumber: t.PhoneNumber,
+					Position:    t.Position,
+					FirstName:   t.FirstName,
+					LastName:    t.LastName,
 				},
 				Status:       StatusScheduled,
 				CampaignId:   c.Id,

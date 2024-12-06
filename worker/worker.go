@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	log "github.com/gophish/gophish/logger"
@@ -19,14 +20,18 @@ type Worker interface {
 
 // DefaultWorker is the background worker that handles watching for new campaigns and sending emails appropriately.
 type DefaultWorker struct {
-	mailer mailer.Mailer
+	mailer            mailer.Mailer
+	whatsappMessenger mailer.WhatsappMessenger
 }
 
 // New creates a new worker object to handle the creation of campaigns
 func New(options ...func(Worker) error) (Worker, error) {
 	defaultMailer := mailer.NewMailWorker()
+	defaultWhatsappSender := mailer.NewMessageWorker()
+
 	w := &DefaultWorker{
-		mailer: defaultMailer,
+		whatsappMessenger: defaultWhatsappSender,
+		mailer:            defaultMailer,
 	}
 	for _, opt := range options {
 		if err := opt(w); err != nil {
@@ -41,6 +46,15 @@ func New(options ...func(Worker) error) (Worker, error) {
 func WithMailer(m mailer.Mailer) func(*DefaultWorker) error {
 	return func(w *DefaultWorker) error {
 		w.mailer = m
+		return nil
+	}
+}
+
+// WithWhatsappMessenger sets the whatsappMessenger for a given worker.
+// By default, workers use a standard, default messageworker.
+func WithWhatsappMessenger(ws mailer.WhatsappMessenger) func(*DefaultWorker) error {
+	return func(w *DefaultWorker) error {
+		w.whatsappMessenger = ws
 		return nil
 	}
 }
@@ -64,6 +78,7 @@ func (w *DefaultWorker) processCampaigns(t time.Time) error {
 	// instead of having to re-connect to the SMTP server for every
 	// email.
 	msg := make(map[int64][]mailer.Mail)
+	wspMsg := make(map[int64][]mailer.Message)
 	for _, m := range ms {
 		// We cache the campaign here to greatly reduce the time it takes to
 		// generate the message (ref #1726)
@@ -76,27 +91,50 @@ func (w *DefaultWorker) processCampaigns(t time.Time) error {
 			campaignCache[c.Id] = c
 		}
 		m.CacheCampaign(&c)
-		msg[m.CampaignId] = append(msg[m.CampaignId], m)
+		if c.SMTP.Interface == "SMTP" {
+			msg[m.CampaignId] = append(msg[m.CampaignId], m)
+		} else if c.SMTP.Interface == "Whatsapp" {
+			wspMsg[m.CampaignId] = append(wspMsg[m.CampaignId], m)
+		}
 	}
 
 	// Next, we process each group of maillogs in parallel
 	for cid, msc := range msg {
-		go func(cid int64, msc []mailer.Mail) {
-			c := campaignCache[cid]
-			if c.Status == models.CampaignQueued {
-				err := c.UpdateStatus(models.CampaignInProgress)
-				if err != nil {
-					log.Error(err)
-					return
-				}
-			}
-			log.WithFields(logrus.Fields{
-				"num_emails": len(msc),
-			}).Info("Sending emails to mailer for processing")
-			w.mailer.Queue(msc)
-		}(cid, msc)
+		go w.processMailGroup(campaignCache[cid], msc)
+	}
+	for cid, wsc := range wspMsg {
+		go w.processWhatsappGroup(campaignCache[cid], wsc)
 	}
 	return nil
+}
+
+// setToInProgress sets campaign's status to in progress
+func setToInProgress(c models.Campaign) {
+	if c.Status == models.CampaignQueued {
+		err := c.UpdateStatus(models.CampaignInProgress)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+	}
+}
+
+// processMailGroup processes a group of maillogs
+func (w *DefaultWorker) processMailGroup(c models.Campaign, msc []mailer.Mail) {
+	setToInProgress(c)
+	log.WithFields(logrus.Fields{
+		"num_emails": len(msc),
+	}).Info("Sending emails to mailer for processing")
+	w.mailer.Queue(msc)
+}
+
+// processWhatsappGroup process a group of whatsapp messages
+func (w *DefaultWorker) processWhatsappGroup(c models.Campaign, wspMsc []mailer.Message) {
+	setToInProgress(c)
+	log.WithFields(logrus.Fields{
+		"num_whatsapps": len(wspMsc),
+	}).Info("Sending whatsapps to messenger for processing")
+	w.whatsappMessenger.Queue(wspMsc)
 }
 
 // Start launches the worker to poll the database every minute for any pending maillogs
@@ -104,6 +142,7 @@ func (w *DefaultWorker) processCampaigns(t time.Time) error {
 func (w *DefaultWorker) Start() {
 	log.Info("Background Worker Started Successfully - Waiting for Campaigns")
 	go w.mailer.Start(context.Background())
+	go w.whatsappMessenger.StartMessaging(context.Background())
 	for t := range time.Tick(1 * time.Minute) {
 		err := w.processCampaigns(t)
 		if err != nil {
@@ -124,6 +163,7 @@ func (w *DefaultWorker) LaunchCampaign(c models.Campaign) {
 	// This is required since you cannot pass a slice of values
 	// that implements an interface as a slice of that interface.
 	mailEntries := []mailer.Mail{}
+	whatsappEntries := []mailer.Message{}
 	currentTime := time.Now().UTC()
 	campaignMailCtx, err := models.GetCampaignMailContext(c.Id, c.UserId)
 	if err != nil {
@@ -143,8 +183,14 @@ func (w *DefaultWorker) LaunchCampaign(c models.Campaign) {
 			return
 		}
 		mailEntries = append(mailEntries, m)
+		whatsappEntries = append(whatsappEntries, m)
 	}
-	w.mailer.Queue(mailEntries)
+	switch c.SMTP.Interface {
+	case "SMTP":
+		w.mailer.Queue(mailEntries)
+	case "Whatsapp":
+		w.whatsappMessenger.Queue(whatsappEntries)
+	}
 }
 
 // SendTestEmail sends a test email
@@ -154,4 +200,14 @@ func (w *DefaultWorker) SendTestEmail(s *models.EmailRequest) error {
 		w.mailer.Queue(ms)
 	}()
 	return <-s.ErrorChan
+}
+
+// SendTestWhatsapp sends a test Whatsapp message
+func (w *DefaultWorker) SendTestWhatsapp(s *models.EmailRequest) error {
+	// go func() {
+	// 	ws := []mailer.Message{s}
+	// 	w.whatsappMessenger.Queue(ws)
+	// }()
+	// return <- s.ErrorChan
+	return errors.New("Method not implemented")
 }

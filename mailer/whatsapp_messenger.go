@@ -37,12 +37,19 @@ func (e *ErrMaxConnectAttempts) WhatsappError() string {
 	return errString
 }
 
+// WhatsappMessenger is an interface that defines an object used to queue
+// and send mailer.Message instances
+type WhatsappMessenger interface {
+	StartMessaging(ctx context.Context)
+	Queue([]Message)
+}
+
 // WhatsappSender exposes the common operations required for sending whatsapp messages.
-// type WhatsappSender interface {
-// 	SendWhatsappMessage(from string, to []string, msg io.WriterTo) error
-// 	Close() error
-// 	Reset() error
-// }
+type WhatsappSender interface {
+	SendWhatsappMessage(from string, to []string, msg io.WriterTo) error
+	Close() error
+	Reset() error
+}
 
 // Message is an interface that handles the common operations for whatsapp messages
 type Message interface {
@@ -60,6 +67,7 @@ type Message interface {
 // to be sent to the same server.
 type MessageWorker struct {
 	queue chan []Message
+	WhatsappMessenger
 }
 
 // NewMessageWorker returns an instance of MessageWorker with the message queue
