@@ -318,6 +318,10 @@ var api = {
     send_test_email: function (req) {
         return query("/util/send_test_email", "POST", req, true)
     },
+    // send_test_whatsapp sends a whatsapp message to the specified email address
+    send_test_whatsapp :function (req) {
+        return query("/util/send_test_whatsapp", "POST", req, true)
+    },
     reset: function () {
         return query("/reset", "POST", {}, true)
     }

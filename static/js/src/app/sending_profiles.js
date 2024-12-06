@@ -41,6 +41,36 @@ function sendTestEmail() {
         })
 }
 
+// Attempts to send a test Whatsapp message by POSTing to /campaigns/
+function sendTestWhatsapp() {
+    var test_whatsapp_request = {
+        template: {},
+        first_name: $("input[name=to_first_name]").val(),
+        last_name: $("input[name=to_last_name]").val(),
+        email: $("input[name=to_number]").val(),
+        position: $("input[name=to_position]").val(),
+        url: '',
+        whatsapp: {
+            number_id: $("#number_id").val(),
+            auth_token: $("#auth_token").val(),
+        }
+    }
+    btnHtml = $("#sendTestWhatsappModalSubmit").html()
+    $("#sendTestWhatsappModalSubmit").html('<i class="fa fa-spinner fa-spin"></i> Sending')
+    // Send the test whatsapp
+    api.send_test_whatsapp(test_whatsapp_request)
+        .success(function (data) {
+            $("#sendTestWhatsappModalSubmit\\.flashes").empty().append("<div style=\"text-align:center\" class=\"alert alert-success\">\
+	    <i class=\"fa fa-check-circle\"></i> Email Sent!</div>")
+            $("#sendTestWhatsappModalSubmit").html(btnHtml)
+        })
+        .error(function (data) {
+            $("#sendTestWhatsappModalSubmit\\.flashes").empty().append("<div style=\"text-align:center\" class=\"alert alert-danger\">\
+	    <i class=\"fa fa-exclamation-circle\"></i> " + escapeHtml(data.responseJSON.message) + "</div>")
+            $("#sendTestWhatsappModalSubmit").html(btnHtml)
+        })
+}
+
 // Save attempts to POST to /smtp/
 function save(idx) {
     var profile = {
