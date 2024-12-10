@@ -231,7 +231,13 @@ func (ps *PhishingServer) PhishHandler(w http.ResponseWriter, r *http.Request) {
 			log.Error(err)
 		}
 	}
-	ptx, err = models.NewPhishingTemplateContext(&c, rs.BaseRecipient, rs.RId)
+	switch c.SMTP.Interface {
+	case "SMTP":
+		ptx, err = models.NewPhishingTemplateContext(&c, rs.BaseRecipient, rs.RId)
+	case "Whatsapp":
+		ptx, err = models.NewMessageTemplateContext(&c, rs.BaseRecipient, rs.RId)
+	}
+
 	if err != nil {
 		log.Error(err)
 		http.NotFound(w, r)
