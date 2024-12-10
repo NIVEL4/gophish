@@ -189,12 +189,15 @@ func (m *MailLog) GetDestNumber() (string, error) {
 }
 
 func (m *MailLog) GenerateMessage() ([]byte, error) {
+	log.Info("GenerateMessage")
+	log.Info("Getting result")
 	r, err := GetResult(m.RId)
 	if err != nil {
 		return nil, err
 	}
 	c := m.cachedCampaign
 	if c == nil {
+		log.Info("Getting campaign context")
 		campaign, err := GetCampaignMailContext(m.CampaignId, m.UserId)
 		if err != nil {
 			return nil, err
@@ -202,12 +205,19 @@ func (m *MailLog) GenerateMessage() ([]byte, error) {
 		c = &campaign
 	}
 
-	ptx, err := NewPhishingTemplateContext(c, r.BaseRecipient, r.RId)
+	log.Info("Generating message template context")
+	ptx, err := NewMessageTemplateContext(c, r.BaseRecipient, r.RId)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
+
+	log.Info("Executing template")
+	log.Info(c.Template.Text)
+	log.Info(ptx)
 	msg, err := ExecuteTemplate(c.Template.Text, ptx)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 	return []byte(msg), nil

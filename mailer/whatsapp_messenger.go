@@ -3,7 +3,6 @@ package mailer
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -41,7 +40,7 @@ func (e *ErrMaxConnectAttempts) WhatsappError() string {
 // and send mailer.Message instances
 type WhatsappMessenger interface {
 	StartMessaging(ctx context.Context)
-	Queue([]Message)
+	MessageQueue([]Message)
 }
 
 // WhatsappSender exposes the common operations required for sending whatsapp messages.
@@ -110,6 +109,7 @@ func errorMessage(err error, ms []Message) {
 // If the context is cancelled before all of the messages are sent,
 // sendMessage just returns and does not modify those messages.
 func sendMessage(ctx context.Context, ms []Message) {
+	log.Info("Sending Whatsapp messages")
 	httpClient := &http.Client{}
 	for _, m := range ms {
 		select {
@@ -119,12 +119,14 @@ func sendMessage(ctx context.Context, ms []Message) {
 			break
 		}
 
+		log.Info("Getting number ID")
 		number_id, err := m.GetNumberId()
 		if err != nil {
 			m.Error(err)
 			continue
 		}
 
+		log.Info("Getting dest number")
 		dest_number, err := m.GetDestNumber()
 		if err != nil {
 			m.Error(err)
@@ -133,12 +135,15 @@ func sendMessage(ctx context.Context, ms []Message) {
 
 		WhatsappAPIEndpoint := fmt.Sprintf(WhatsappAPI, number_id)
 
+		log.Info("Generating message")
 		RequestBody, err := m.GenerateMessage()
 		if err != nil {
+			log.Error(err)
 			m.Error(err)
 			continue
 		}
 
+		log.Info("Building POST request")
 		req, err := http.NewRequest("POST", WhatsappAPIEndpoint, bytes.NewBuffer(RequestBody))
 		if err != nil {
 			log.WithFields(logrus.Fields{
@@ -150,6 +155,7 @@ func sendMessage(ctx context.Context, ms []Message) {
 			continue
 		}
 
+		log.Info("Getting auth token")
 		auth_token, err := m.GetAuthToken()
 		if err != nil {
 			log.WithFields(logrus.Fields{
@@ -163,6 +169,8 @@ func sendMessage(ctx context.Context, ms []Message) {
 
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", auth_token))
+
+		log.Info("Making POST request to Whatsapp API")
 		resp_obj, err := httpClient.Do(req)
 
 		if err != nil {
@@ -176,35 +184,39 @@ func sendMessage(ctx context.Context, ms []Message) {
 		}
 
 		defer resp_obj.Body.Close()
+
+		log.Info("Reading response body")
 		resp_str, err := io.ReadAll(resp_obj.Body)
 
-		if err != nil {
-			m.Error(err)
-			continue
-		}
-
-		var resp map[string]interface{}
-		err = json.Unmarshal([]byte(resp_str), &resp)
+		log.Info(fmt.Sprintf("Response body: %s", resp_str))
 
 		if err != nil {
 			m.Error(err)
 			continue
 		}
 
-		error_resp, ok := resp["error"]
-		var error map[string]interface{}
+		// var resp map[string]interface{}
+		// err = json.Unmarshal([]byte(resp_str), &resp)
 
-		if !ok {
-			_ = json.Unmarshal([]byte(error_resp.(string)), &error)
-			err = ErrWhatsappAPIResponse
-			log.WithFields(logrus.Fields{
-				"code":   error["code"],
-				"number": dest_number,
-			}).Warn(err)
-			errorMessage(err, ms)
-			m.Backoff(err)
-			continue
-		}
+		// if err != nil {
+		// 	m.Error(err)
+		// 	continue
+		// }
+
+		// error_resp, ok := resp["error"]
+		// var error map[string]interface{}
+
+		// if !ok {
+		// 	_ = json.Unmarshal([]byte(error_resp.(string)), &error)
+		// 	err = ErrWhatsappAPIResponse
+		// 	log.WithFields(logrus.Fields{
+		// 		"code":   error["code"],
+		// 		"number": dest_number,
+		// 	}).Warn(err)
+		// 	errorMessage(err, ms)
+		// 	m.Backoff(err)
+		// 	continue
+		// }
 
 		log.WithFields(logrus.Fields{
 			"numer_id":    number_id,

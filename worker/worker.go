@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	log "github.com/gophish/gophish/logger"
@@ -16,6 +17,7 @@ type Worker interface {
 	Start()
 	LaunchCampaign(c models.Campaign)
 	SendTestEmail(s *models.EmailRequest) error
+	SendTestWhatsapp(s *models.EmailRequest) error
 }
 
 // DefaultWorker is the background worker that handles watching for new campaigns and sending emails appropriately.
@@ -26,6 +28,7 @@ type DefaultWorker struct {
 
 // New creates a new worker object to handle the creation of campaigns
 func New(options ...func(Worker) error) (Worker, error) {
+	log.Info("Creating new Worker")
 	defaultMailer := mailer.NewMailWorker()
 	defaultWhatsappSender := mailer.NewMessageWorker()
 
@@ -62,6 +65,7 @@ func WithWhatsappMessenger(ws mailer.WhatsappMessenger) func(*DefaultWorker) err
 // processCampaigns loads maillogs scheduled to be sent before the provided
 // time and sends them to the mailer.
 func (w *DefaultWorker) processCampaigns(t time.Time) error {
+	log.Info("Processing campaigns")
 	ms, err := models.GetQueuedMailLogs(t.UTC())
 	if err != nil {
 		log.Error(err)
@@ -82,6 +86,7 @@ func (w *DefaultWorker) processCampaigns(t time.Time) error {
 	for _, m := range ms {
 		// We cache the campaign here to greatly reduce the time it takes to
 		// generate the message (ref #1726)
+		log.Info(fmt.Sprintf("Caching campaign with ID %d", m.CampaignId))
 		c, ok := campaignCache[m.CampaignId]
 		if !ok {
 			c, err = models.GetCampaignMailContext(m.CampaignId, m.UserId)
@@ -110,6 +115,7 @@ func (w *DefaultWorker) processCampaigns(t time.Time) error {
 
 // setToInProgress sets campaign's status to in progress
 func setToInProgress(c models.Campaign) {
+	log.Info(fmt.Sprintf("Setting campaign %d to In Progress", c.Id))
 	if c.Status == models.CampaignQueued {
 		err := c.UpdateStatus(models.CampaignInProgress)
 		if err != nil {
@@ -121,6 +127,7 @@ func setToInProgress(c models.Campaign) {
 
 // processMailGroup processes a group of maillogs
 func (w *DefaultWorker) processMailGroup(c models.Campaign, msc []mailer.Mail) {
+	log.Info(fmt.Sprintf("Processing SMTP campaign with ID %d", c.Id))
 	setToInProgress(c)
 	log.WithFields(logrus.Fields{
 		"num_emails": len(msc),
@@ -130,11 +137,12 @@ func (w *DefaultWorker) processMailGroup(c models.Campaign, msc []mailer.Mail) {
 
 // processWhatsappGroup process a group of whatsapp messages
 func (w *DefaultWorker) processWhatsappGroup(c models.Campaign, wspMsc []mailer.Message) {
+	log.Info(fmt.Sprintf("Processing Whatsapp campaign with ID %d", c.Id))
 	setToInProgress(c)
 	log.WithFields(logrus.Fields{
 		"num_whatsapps": len(wspMsc),
 	}).Info("Sending whatsapps to messenger for processing")
-	w.whatsappMessenger.Queue(wspMsc)
+	w.whatsappMessenger.MessageQueue(wspMsc)
 }
 
 // Start launches the worker to poll the database every minute for any pending maillogs
@@ -154,22 +162,26 @@ func (w *DefaultWorker) Start() {
 
 // LaunchCampaign starts a campaign
 func (w *DefaultWorker) LaunchCampaign(c models.Campaign) {
+	log.Info(fmt.Sprintf("Launching campaign %d", c.Id))
 	ms, err := models.GetMailLogsByCampaign(c.Id)
 	if err != nil {
 		log.Error(err)
 		return
 	}
+	log.Info(fmt.Sprintf("Locking mails for campaign %d", c.Id))
 	models.LockMailLogs(ms, true)
 	// This is required since you cannot pass a slice of values
 	// that implements an interface as a slice of that interface.
 	mailEntries := []mailer.Mail{}
 	whatsappEntries := []mailer.Message{}
 	currentTime := time.Now().UTC()
+	log.Info(fmt.Sprintf("Getting context for campaign %d", c.Id))
 	campaignMailCtx, err := models.GetCampaignMailContext(c.Id, c.UserId)
 	if err != nil {
 		log.Error(err)
 		return
 	}
+	log.Info(fmt.Sprintf("Sending scheduled messages for campaign %d", c.Id))
 	for _, m := range ms {
 		// Only send the emails scheduled to be sent for the past minute to
 		// respect the campaign scheduling options
@@ -185,11 +197,12 @@ func (w *DefaultWorker) LaunchCampaign(c models.Campaign) {
 		mailEntries = append(mailEntries, m)
 		whatsappEntries = append(whatsappEntries, m)
 	}
+	log.Info(fmt.Sprintf("Queuing message entries for campaign %d", c.Id))
 	switch c.SMTP.Interface {
 	case "SMTP":
 		w.mailer.Queue(mailEntries)
 	case "Whatsapp":
-		w.whatsappMessenger.Queue(whatsappEntries)
+		w.whatsappMessenger.MessageQueue(whatsappEntries)
 	}
 }
 

@@ -35,6 +35,37 @@ type PhishingTemplateContext struct {
 	BaseRecipient
 }
 
+func NewMessageTemplateContext(ctx TemplateContext, r BaseRecipient, rid string) (PhishingTemplateContext, error) {
+	templateURL, err := ExecuteTemplate(ctx.getBaseURL(), r)
+	if err != nil {
+		return PhishingTemplateContext{}, err
+	}
+
+	// For the base URL, we'll reset the the path and the query
+	// This will create a URL in the form of http://example.com
+	baseURL, err := url.Parse(templateURL)
+	if err != nil {
+		return PhishingTemplateContext{}, err
+	}
+
+	baseURL.Path = ""
+	baseURL.RawQuery = ""
+
+	phishURL, _ := url.Parse(templateURL)
+
+	return PhishingTemplateContext{
+		BaseRecipient: r,
+		BaseURL:       baseURL.String(),
+		URL:           phishURL.String(),
+		TrackingURL:   "",
+		Tracker:       "",
+		From:          "",
+		RId:           rid,
+		QrCodeHTML:    "",
+		QrCodeB64:     "",
+	}, nil
+}
+
 // NewPhishingTemplateContext returns a populated PhishingTemplateContext,
 // parsing the correct fields from the provided TemplateContext and recipient.
 func NewPhishingTemplateContext(ctx TemplateContext, r BaseRecipient, rid string) (PhishingTemplateContext, error) {
