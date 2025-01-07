@@ -195,6 +195,23 @@ $(document).ready(function () {
         $("#advancedarea").toggle();
     })
 
+    $("#saveclientdata").click(function() {
+	client = {}
+	client.name = $("#client_name").val()
+	api.client.post(client).done(function(data) {
+	    if (data.success) {
+		successFlash(data.message)
+	    } else {
+		errorFlash(data.message)
+	    }
+	})
+	return false
+    })
+
+    $("#cancelclient").click(function() {
+	loadClientData()
+    })
+
     $("#saveqrsettings").click(function() {
         qr = {}
         qr.qr_size = parseInt($("#qr_size").val())
@@ -248,15 +265,22 @@ $(document).ready(function () {
         })
     }
 
+    function loadClientData() {
+	api.client.get()
+	.success(function (client) {
+	    $("#client_name").val(client.name)
+	})
+	.error(function() {
+	    errorFlash("Error fetching client data")
+	})
+    }
+
     function loadQRConfigs() {
         api.QR.get()
         .success(function (qr) {
             $("#qr_size").val(qr.qr_size)
             $("#qr_pixels").val(qr.qr_pixels)
             $("#qr_background").val(qr.qr_background)
-        })
-        .error(function() {
-            errorFlash("Error fetching QR configs")
         })
     }
 
@@ -268,4 +292,5 @@ $(document).ready(function () {
 
     loadIMAPSettings()
     loadQRConfigs()
+    loadClientData()
 })

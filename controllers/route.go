@@ -176,6 +176,7 @@ type templateParams struct {
 	Title        string
 	Flashes      []interface{}
 	User         models.User
+	Client	     models.Client
 	Token        string
 	Version      string
 	ModifySystem bool
@@ -185,11 +186,16 @@ type templateParams struct {
 // the CSRF token.
 func newTemplateParams(r *http.Request) templateParams {
 	user := ctx.Get(r, "user").(models.User)
+	client, err := models.GetClient()
+	if err != nil {
+		log.Error(err)
+	}
 	session := ctx.Get(r, "session").(*sessions.Session)
 	modifySystem, _ := user.HasPermission(models.PermissionModifySystem)
 	return templateParams{
 		Token:        csrf.Token(r),
 		User:         user,
+		Client:	      client,
 		ModifySystem: modifySystem,
 		Version:      config.Version,
 		Flashes:      session.Flashes(),

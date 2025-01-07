@@ -71,6 +71,17 @@ var capitalize = function (string) {
 Define our API Endpoints
 */
 var api = {
+    // client contains the endpoints for /client
+    client: {
+	// get() - Returns the client data
+	get: function() {
+	    return query("/client", "GET", {}, false)
+	},
+	// post() - Replaces the client data
+	post: function(data) {
+	    return query("/client", "POST", data, false)
+	}
+    },
     // campaigns contains the endpoints for /campaigns
     campaigns: {
         // get() - Queries the API for GET /campaigns
