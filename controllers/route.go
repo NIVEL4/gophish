@@ -195,7 +195,7 @@ func newTemplateParams(r *http.Request) templateParams {
 	return templateParams{
 		Token:        csrf.Token(r),
 		User:         user,
-		Client:	      client,
+		Client:       client,
 		ModifySystem: modifySystem,
 		Version:      config.Version,
 		Flashes:      session.Flashes(),
