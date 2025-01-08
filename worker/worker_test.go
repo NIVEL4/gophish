@@ -75,6 +75,7 @@ func createTestData(t *testing.T, ctx *testContext) {
 	smtp.UserId = 1
 	smtp.Host = "example.com"
 	smtp.FromAddress = "test@test.com"
+	smtp.Interface = "SMTP"
 	models.PostSMTP(&smtp)
 }
 

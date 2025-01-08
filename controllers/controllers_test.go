@@ -111,6 +111,7 @@ func createTestData(t *testing.T) {
 	smtp.UserId = 1
 	smtp.Host = "example.com"
 	smtp.FromAddress = "test@test.com"
+	smtp.Interface = "SMTP"
 	models.PostSMTP(&smtp)
 
 	// Setup and "launch" our campaign

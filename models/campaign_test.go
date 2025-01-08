@@ -189,6 +189,7 @@ func setupCampaignDependencies(b *testing.B, size int) {
 	smtp.UserId = 1
 	smtp.Host = "example.com"
 	smtp.FromAddress = "test@test.com"
+	smtp.Interface = "SMTP"
 	err = PostSMTP(&smtp)
 	if err != nil {
 		b.Fatalf("error posting smtp: %v", err)

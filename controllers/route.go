@@ -176,7 +176,7 @@ type templateParams struct {
 	Title        string
 	Flashes      []interface{}
 	User         models.User
-	Client	     models.Client
+	Client       models.Client
 	Token        string
 	Version      string
 	ModifySystem bool

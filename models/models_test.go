@@ -81,6 +81,7 @@ func (s *ModelsSuite) createCampaignDependencies(ch *check.C, optional ...string
 	smtp.UserId = 1
 	smtp.Host = "example.com"
 	smtp.FromAddress = "test@test.com"
+	smtp.Interface = "SMTP"
 	ch.Assert(PostSMTP(&smtp), check.Equals, nil)
 
 	c := Campaign{Name: "Test campaign"}

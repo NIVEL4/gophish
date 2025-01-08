@@ -16,7 +16,7 @@ func (client *Client) TableName() string {
 
 // Validate performs validation on given settings
 func (client *Client) Validate() error {
-        return nil
+	return nil
 }
 
 // GetClient returns the Client data
@@ -51,4 +51,3 @@ func UpdateClient(client *Client) error {
 	}
 	return err
 }
-
