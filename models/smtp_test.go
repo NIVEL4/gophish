@@ -13,6 +13,7 @@ func (s *ModelsSuite) TestPostSMTP(c *check.C) {
 		Name:        "Test SMTP",
 		Host:        "1.1.1.1:25",
 		FromAddress: "foo@example.com",
+		Interface:   "SMTP",
 		UserId:      1,
 	}
 	err := PostSMTP(&smtp)
@@ -26,6 +27,7 @@ func (s *ModelsSuite) TestPostSMTPNoHost(c *check.C) {
 	smtp := SMTP{
 		Name:        "Test SMTP",
 		FromAddress: "foo@example.com",
+		Interface:   "SMTP",
 		UserId:      1,
 	}
 	err := PostSMTP(&smtp)
@@ -34,9 +36,10 @@ func (s *ModelsSuite) TestPostSMTPNoHost(c *check.C) {
 
 func (s *ModelsSuite) TestPostSMTPNoFrom(c *check.C) {
 	smtp := SMTP{
-		Name:   "Test SMTP",
-		UserId: 1,
-		Host:   "1.1.1.1:25",
+		Name:      "Test SMTP",
+		UserId:    1,
+		Host:      "1.1.1.1:25",
+		Interface: "SMTP",
 	}
 	err := PostSMTP(&smtp)
 	c.Assert(err, check.Equals, ErrFromAddressNotSpecified)
@@ -46,6 +49,7 @@ func (s *ModelsSuite) TestPostInvalidFrom(c *check.C) {
 	smtp := SMTP{
 		Name:        "Test SMTP",
 		Host:        "1.1.1.1:25",
+		Interface:   "SMTP",
 		FromAddress: "Foo Bar <foo@example.com>",
 		UserId:      1,
 	}
@@ -58,6 +62,7 @@ func (s *ModelsSuite) TestPostInvalidFromEmail(c *check.C) {
 		Name:        "Test SMTP",
 		Host:        "1.1.1.1:25",
 		FromAddress: "example.com",
+		Interface:   "SMTP",
 		UserId:      1,
 	}
 	err := PostSMTP(&smtp)
@@ -69,6 +74,7 @@ func (s *ModelsSuite) TestPostSMTPValidHeader(c *check.C) {
 		Name:        "Test SMTP",
 		Host:        "1.1.1.1:25",
 		FromAddress: "foo@example.com",
+		Interface:   "SMTP",
 		UserId:      1,
 		Headers: []Header{
 			Header{Key: "Reply-To", Value: "test@example.com"},
