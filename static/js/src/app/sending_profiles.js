@@ -21,6 +21,7 @@ function sendTestEmail() {
             host: $("#host").val(),
             username: $("#username").val(),
             password: $("#password").val(),
+	    interface_type: $("#interface_type").val(),
             ignore_cert_errors: $("#ignore_cert_errors").prop("checked"),
             headers: headers,
         }
