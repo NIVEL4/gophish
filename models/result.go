@@ -98,12 +98,7 @@ func (r *Result) HandleEmailOpened(details EventDetails) error {
 	}
 	// Don't update the status if the user already clicked the link
 	// or submitted data to the campaign
-	if r.Status == EventClicked || r.Status == EventDataSubmit {
-		return nil
-	}
-	r.Status = EventOpened
-	r.ModifiedDate = event.Time
-	return db.Save(r).Error
+	return db.Model(&r).Where("status != ? AND status != ?", EventClicked, EventDataSubmit).Updates(Result{Status: EventOpened, ModifiedDate: event.Time}).Error
 }
 
 // HandleClickedLink updates a Result in the case where the recipient clicked
@@ -115,12 +110,7 @@ func (r *Result) HandleClickedLink(details EventDetails) error {
 	}
 	// Don't update the status if the user has already submitted data via the
 	// landing page form.
-	if r.Status == EventDataSubmit {
-		return nil
-	}
-	r.Status = EventClicked
-	r.ModifiedDate = event.Time
-	return db.Save(r).Error
+	return db.Model(&r).Where("status != ?", EventDataSubmit).Updates(Result{Status: EventClicked, ModifiedDate: event.Time}).Error
 }
 
 // HandleFormSubmit updates a Result in the case where the recipient submitted
@@ -130,9 +120,7 @@ func (r *Result) HandleFormSubmit(details EventDetails) error {
 	if err != nil {
 		return err
 	}
-	r.Status = EventDataSubmit
-	r.ModifiedDate = event.Time
-	return db.Save(r).Error
+	return db.Model(&r).Updates(Result{Status: EventDataSubmit, ModifiedDate: event.Time}).Error
 }
 
 // HandleEmailReport updates a Result in the case where they report a simulated
