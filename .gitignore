@@ -31,3 +31,5 @@ gophish.db*
 gophish
 
 local-data/
+
+.idea/
