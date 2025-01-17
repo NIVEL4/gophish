@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"encoding/gob"
+	"net/http"
 
 	"github.com/gophish/gophish/models"
 	"github.com/gorilla/securecookie"
@@ -13,6 +14,8 @@ func init() {
 	gob.Register(&models.User{})
 	gob.Register(&models.Flash{})
 	Store.Options.HttpOnly = true
+	Store.Options.Secure = true
+	Store.Options.SameSite = http.SameSiteStrictMode
 	// This sets the maxAge to 5 days for all cookies
 	Store.MaxAge(86400 * 5)
 }
