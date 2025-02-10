@@ -4,7 +4,7 @@ $(document).ready(function () {
         api.reset()
             .success(function (response) {
                 user.api_key = response.data
-                successFlash(response.message)
+                    
                 $("#api_key").val(user.api_key)
             })
             .error(function (data) {
@@ -196,18 +196,30 @@ $(document).ready(function () {
     })
 
     $("#saveclientdata").click(function() {
-	client = {}
-	client.name = $("#client_name").val()
-	api.client.post(client).done(function(data) {
-	    if (data.success) {
-		successFlash(data.message)
-	    } else {
-		errorFlash(data.message)
-	    }
-	})
-	return false
-    })
-
+        let client = {
+            name: $("#client_name").val(),
+            email: $("#client_email").val(),
+            monitor_url: $("#client_monitor_url").val(),
+            monitor_password: $("#client_monitor_password").val(),
+            apolo_api_key: $("#client_api_key").val()
+        };
+    
+        api.client.post(client).done(function(data) {
+            if (data.success) {
+                successFlash(data.message);
+                loadClientData();
+                loadClientHistory();
+            } else {
+                errorFlash(data.message);
+            }
+        }).fail(function() {
+            errorFlash("Error saving client data.");
+        });
+    
+        return false;
+    });
+    
+    
     $("#cancelclient").click(function() {
 	loadClientData()
     })
@@ -266,15 +278,175 @@ $(document).ready(function () {
     }
 
     function loadClientData() {
-	api.client.get()
-	.success(function (client) {
-	    $("#client_name").val(client.name)
-	})
-	.error(function() {
-	    errorFlash("Error fetching client data")
-	})
+        api.client.get()
+            .success(function(client) {
+                if (!client || Object.keys(client).length === 0) {
+                    errorFlash("No clients registered.");
+                    return;
+                }
+    
+                $("#client_name").val(client.name);
+                $("#client_name_modal").val(client.name);
+                $("#client_email").val(client.email);
+                $("#client_email_modal").val(client.email);
+                $("#client_monitor_url").val(client.monitor_url);
+                $("#client_monitor_url_modal").val(client.monitor_url);
+                $("#client_monitor_password").val(client.monitor_password);
+                $("#client_monitor_password_modal").val(client.monitor_password);
+                $("#client_api_key").val(client.apolo_api_key);
+                $("#client_api_key_modal").val(client.apolo_api_key);
+    
+                let isDisabled = !client.email || !client.apolo_api_key;
+                $("#send_monitor_modal").prop("disabled", isDisabled);
+    
+                $("#send_status").find("span").remove();
+    
+                let statusHtml = '';
+    
+                if (!client.send_date || client.send_date === "Not sent") {
+                    statusHtml += `<span class="badge" style="background-color: rgb(224, 51, 51); color:white;">
+                                    <i class="bi bi-check-circle"></i> Not sent
+                                   </span> `;
+                }
+                if (!client.email) {
+                    statusHtml += `<span class="badge" style="background-color: rgb(199, 201, 79); color:white;">
+                                    <i class="bi bi-check-circle"></i> Not registered client email
+                                   </span> `;
+                }
+                if (!client.monitor_password) {
+                    statusHtml += `<span class="badge" style="background-color: rgb(255, 165, 0); color:white;">
+                                    <i class="bi bi-exclamation-triangle"></i> Not registered monitor password
+                                   </span>`;
+                }
+                if (!client.apolo_api_key) {
+                    statusHtml += `<span class="badge" style="background-color: rgb(199, 201, 79); color:white;">
+                                    <i class="bi bi-check-circle"></i> Not registered api key
+                                   </span>`;
+                }
+    
+                $("#send_status").append(statusHtml);
+            })
+            .error(function() {
+                errorFlash("Error fetching client data.");
+            });
+    }
+    
+    
+    function loadMonitorUrl() {
+        const domainName = window.location.hostname.split('.').slice(-2).join('.');
+        /* Receive and load unexposed URL*/ 
+        /* Load from server*/ 
+        const monitorUrl = `https:/${domainName}/monitor`;
+        
+        const inputURL = document.getElementById('client_monitor_url');
+        if (inputURL) {
+            inputURL.value = monitorUrl;
+        }
+        const inputURLsending = document.getElementById('sending_phishing_monitor_url');
+        if (inputURLsending) {
+            inputURLsending.value = monitorUrl;
+        }
+        
+        const linkElement = document.getElementById('go_to_panel_monitor');
+        if (linkElement) {
+            linkElement.href = monitorUrl;
+        }
     }
 
+    $(document).on("click", ".lock-field", function() {
+        var input = $($(this).data("target"));
+        var lockButton = $(this);
+
+        if (input.prop("readonly")) {
+            input.prop("readonly", false);
+            lockButton.html('<i class="fa fa-lock"></i>');
+        } else {
+            input.prop("readonly", true);
+            lockButton.html('<i class="fa fa-unlock"></i>');
+        }
+    });
+
+    $('.copy-button').on('click', function() {
+        var targetId = $(this).data('target');
+        var $inputElement = $(targetId);
+    
+        if ($inputElement.length) {
+            navigator.clipboard.writeText($inputElement.val())
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+        }
+    });
+
+    $(document).on("click", ".reveal-password", function() {
+        var input = $($(this).data("target"));
+        var RevealButton = $(this);
+    
+        if (input.attr("type") === "password") {
+            input.attr("type", "text");
+            RevealButton.html('<i class="fa fa-eye-slash"></i>');
+        } else {
+            input.attr("type", "password");
+            RevealButton.html('<i class="fa fa-eye"></i>');
+        }
+    });
+
+    function loadClientHistory() {
+        api.client_history.get()
+            .done(function(history) {
+                if (!Array.isArray(history)) {
+                    console.error("Expected an array but got:", history);
+                    return;
+                }
+    
+                $("#clientTable tbody").empty();
+    
+                history.forEach(function (record) {
+                    let email = record.email ? record.email : 'Not provided';
+                    let createdAt = record.created_at ? new Date(record.created_at).toLocaleString() : 'Unknown';
+                    let sendDate = record.send_date ? new Date(record.send_date).toLocaleString() : 'Not sent';
+                    let changeDate = record.change_date ? new Date(record.change_date).toLocaleString() : 'Unknown';
+    
+                    let row = `<tr>
+                        <td>${record.name}</td>
+                        <td>${record.monitor_url}</td>
+                        <td><span class="hidden-password" data-password="${record.monitor_password}">**********</span></td>
+                        <td><span class="hidden-password" data-password="${record.apolo_api_key}">**********</span></td>
+                        <td>${createdAt}</td>
+                        <td>${email}</td>
+                        <td>${sendDate}</td>
+                        <td>${changeDate}</td>
+                    </tr>`;
+    
+                    $("#clientTable tbody").append(row);
+                });
+            })
+            .fail(function() {
+                errorFlash("Error fetching client history data");
+            });
+    }
+    
+    
+    $(document).on("click", "#reveal_password_from_client_table", function() {
+        let button = $(this);
+        let isHidden = button.find("i").hasClass("fa-eye");
+        
+        $(".hidden-password").each(function() {
+            let span = $(this);
+            if (isHidden) {
+                span.text(span.data("password"));
+            } else {
+                span.text("**********");
+            }
+        });
+    
+        if (isHidden) {
+            button.html('<i class="fa fa-eye-slash"></i> Hide passwords');
+        } else {
+            button.html('<i class="fa fa-eye"></i> Reveal passwords');
+        }
+    });
+    
     function loadQRConfigs() {
         api.QR.get()
         .success(function (qr) {
@@ -293,4 +465,6 @@ $(document).ready(function () {
     loadIMAPSettings()
     loadQRConfigs()
     loadClientData()
+    loadMonitorUrl()
+    loadClientHistory()
 })

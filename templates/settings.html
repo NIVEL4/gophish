@@ -276,22 +276,252 @@
                 <button id="cancelqr" type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
             </form>
         </div>
-	<div role="tabpanel" class="tab-pane" id="clientData">
-	    <br>
-	    <form id="clientForm">
-	    <div class="row">
-		<label for="client_name" class="col-sm-2 control-label form-label">Client Name:</label>
-		<div class="col-md-6">
-		    <input type="text" id="client_name" name="client_name" class="form-control" />
-		</div>
-	    </div>
-	    <br>
-	    <button class="btn btn-primary" id="saveclientdata" type="button"><i class="fa fa-save"></i> Save</button>
-	    <button id="cancelclient" type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
-	</div>
+        <!-- Client Settings-->
+        <div role="tabpanel" class="tab-pane" id="clientData">
+            <br>
+            <!-- FORM-->
+            <form id="clientForm">
+                <!-- SECTION CLIENT -->
+                <h6>Client Information</h6>
+                <div class="row">
+                    <label for="client_name" class="col-sm-2 control-label form-label">Client name:</label>
+                    <div class="col-md-6">
+                        <input type="text" id="client_name" name="client_name" class="form-control" placeholder="Client" readonly/>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary lock-field" data-target="#client_name" type="button">
+                            <i class="fa fa-unlock"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="row">
+                    <label for="client_email" class="col-sm-2 control-label form-label">Client email:</label>
+                    <div class="col-md-6">
+                        <input type="email" id="client_email" name="client_email" class="form-control" placeholder="email@client.TLD" required readonly />
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary lock-field" data-target="#client_email" type="button">
+                            <i class="fa fa-unlock"></i>
+                        </button>
+                    </div>
+                </div>            
+                <!-- MONITOR SECTION -->
+                <h6>Live Phishing Monitor</h6>
+                <p>Allows the client to view the status of phishing campaign.</p>
+                <div class="row">
+                    <label for="client_monitor_url" class="col-sm-2 control-label form-label">URL:</label>
+                    <div class="col-md-6">
+                        <input type="text" id="client_monitor_url" name="client_monitor_url" onclick="" class="form-control" readonly/>
+                    </div>
+                    <button class="btn btn-primary copy-button" data-target="client_monitor_url" type="button">
+                        <i class="fa fa-copy"></i>  Copy
+                    </button>
+                    <a href="" class="btn btn-info" role="button" id="go_to_panel_monitor" target="_blank">
+                        <i class="fa fa-link"></i> Go to panel
+                    </a>
+                </div>
+                <div class="row">
+                    <label for="client_monitor_password" class="col-sm-2 control-label form-label">Password:</label>
+                    <div class="col-md-6">
+                        <input type="password" id="client_monitor_password" name="client_monitor_password" class="form-control" placeholder="********************************************************************"/>
+                    </div>
+                    <button class="btn btn-primary copy-button" data-target="#client_monitor_password" type="button">
+                        <i class="fa fa-copy"></i> Copy password
+                        <i class="fa fa-key"></i>
+                    </button>
+                    <button class="btn btn-danger reveal-password" data-target="#client_monitor_password" type="button">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-danger">
+                        <i class="fa fa-refresh"></i> Generate & Update
+                    </button>
+                </div>
+                <!-- API SECTION -->
+                <h6>Apolo API KEY</h6>
+                <div class="row">
+                    <label for="client_api_key" class="col-sm-2 control-label form-label">API KEY:</label>
+                    <div class="col-md-6">
+                        <input type="password" id="client_api_key" name="client_api_key" class="form-control" placeholder="********************************************************************"/>
+                    </div>
+                    <button class="btn btn-primary copy-button" data-target="#client_api_key" type="button">
+                        <i class="fa fa-copy"></i>  Copy API KEY
+                        <i class="fa fa-key"></i>
+                    </button>
+                    <button type="button" class="btn btn-danger reveal-password" data-target="#client_api_key">
+                        <i class="fa fa-eye"></i></button>
+                </div>
+                <button class="btn btn-primary" id="saveclientdata" type="button">
+                    <i class="fa fa-save"></i> Save</button>
+                <button id="cancelclient" type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
+            </form>
+            <!-- end -->
+            <br>
+            <hr class="my-4 border-2 border-primary">
+            <div class="row">
+            <h6> Send Access</h6>                            
+                <div class="mb-3 d-flex align-items-center" id="send_status">
+                    <label class="form-label me-2">Status:</label>
+                </div>
+                <button type="button" class="btn btn-primary" id="send_monitor_modal" data-toggle="modal" data-backdrop="static"
+                    data-user-id="-1" data-target="#modal" disabled> <i class="fa fa-envelope"></i> Send phishing monitor to client
+                </button>
+            </div>
+            <br>
+            <!-- CLIENT TABLE-->
+            <div class="row">
+                <h6>Historical Records</h6>
+                <button type="button" class="btn btn-danger" id="reveal_password_from_client_table">
+                    <i class="fa fa-eye"></i> Reveal passwords</button>
+                <table id="clientTable" class="table">
+                    <thead>
+                        <tr>
+                            <th class="col">Client</th>
+                            <th class="col">Monitor URL</th>
+                            <th class="col">Monitor Password</th>
+                            <th class="col">API KEY</th>
+                            <th class="col">Created at</th>
+                            <th class="col">Email</th>
+                            <th class="col">Send date</th>
+                            <th class="col">Change Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <!-- Reporting Settings End -->
     </div>
 </div>
+<!-- Modal -->
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Send Access</h4>
+            </div>
+            <div class="modal-body">
+                <h6></h6>
+                <form id="monitorForm">
+                    <p style="background-color: #27224F; color:#ebebeb"> &nbsp;Client</p>
+                    <!-- Name -->
+                    <div class="form-group" style="margin-bottom: 15px; display: flex; align-items: center;">
+                        <label class="control-label" style="width: 120px; text-align: right; margin-right: 10px;">Client Name:</label>
+                        <div style="flex-grow: 1;">
+                            <div class="input-group">
+                                <span class="input-group-addon" 
+                                    style="background-color: #27224F !important; color: white; border: none; min-width: 40px; text-align: center;">
+                                    <i class="fa fa-user"></i>
+                                </span>
+                                <input type="text" class="form-control" id="client_name_modal" placeholder="Enter name"
+                                    style="height: 40px; box-shadow: none; border: 1px solid #ccc;" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group" style="margin-bottom: 15px; display: flex; align-items: center;">
+                        <label class="control-label" style="width: 120px; text-align: right; margin-right: 10px;">Client Email:</label>
+                        <div style="flex-grow: 1;">
+                            <div class="input-group">
+                                <span class="input-group-addon" 
+                                    style="background-color: #27224F !important; color: white; border: none; min-width: 40px; text-align: center;">
+                                    <i class="fa fa-envelope"></i>
+                                </span>
+                                <input type="email" class="form-control" id="client_email_modal" placeholder="Enter email"
+                                    style="height: 40px; box-shadow: none; border: 1px solid #ccc;" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monitor URL -->
+                    <div class="form-group" style="margin-bottom: 15px; display: flex; align-items: center;">
+                        <label class="control-label" style="width: 120px; text-align: right; margin-right: 10px;">Monitor URL:</label>
+                        <div style="flex-grow: 1;">
+                            <div class="input-group">
+                                <span class="input-group-addon" 
+                                    style="background-color: #27224F !important; color: white; border: none; min-width: 40px; text-align: center;">
+                                    <i class="fa fa-link"></i>
+                                </span>
+                                <input type="url" class="form-control" id="client_monitor_url_modal" placeholder="Enter monitor URL"
+                                    style="height: 40px; box-shadow: none; border: 1px solid #ccc;" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monitor Password -->
+                    <div class="form-group" style="margin-bottom: 15px; display: flex; align-items: center;">
+                        <label class="control-label" style="width: 120px; text-align: right; margin-right: 10px;">Monitor Password:</label>
+                        <div style="flex-grow: 1;">
+                            <div class="input-group">
+                                <span class="input-group-addon" 
+                                    style="background-color: #27224F !important; color: white; border: none; min-width: 40px; text-align: center;">
+                                    <i class="fa fa-key"></i>
+                                </span>
+                                <input type="password" class="form-control" id="client_monitor_password_modal" placeholder="Enter monitor password"
+                                    style="height: 40px; box-shadow: none; border: 1px solid #ccc;" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Key -->
+                    <div class="form-group" style="margin-bottom: 15px; display: flex; align-items: center;">
+                        <label class="control-label" style="width: 120px; text-align: right; margin-right: 10px;">API Key:</label>
+                        <div style="flex-grow: 1;">
+                            <div class="input-group">
+                                <span class="input-group-addon" 
+                                    style="background-color: #27224F !important; color: white; border: none; min-width: 40px; text-align: center;">
+                                    <i class="fa fa-rocket"></i>
+                                </span>
+                                <input type="password" class="form-control" id="client_api_key_modal" placeholder="Enter API key"
+                                    style="height: 40px; box-shadow: none; border: 1px solid #ccc;" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <p style="background-color: #27224F; color:#ebebeb"> &nbsp;Via Gophish (TEST)</p>
+                    <!-- Via Gophish-->
+                    <div>
+                        <label for="mail-template" class="form-label">Mail Template:</label>
+                        <select class="form-select" id="mail-template">
+                            <option value="1">Template 1</option>
+                            <option value="2">Template 2</option>
+                        </select>
+                    </div>
+
+                    <!-- Specialist Name-->
+                    
+                    <div class="form-group" style="margin-bottom: 15px; display: flex; align-items: center;">
+                        <label class="control-label" style="width: 120px; text-align: right; margin-right: 10px;">Specialist Name:</label>
+                        <div style="flex-grow: 1;">
+                            <div class="input-group">
+                                <span class="input-group-addon" 
+                                    style="background-color: #27224F !important; color: white; border: none; min-width: 40px; text-align: center;">
+                                    <i class="fa fa-user-secret"></i>
+                                </span>
+                                <input type="text" class="form-control" id="specialist_name_modal" placeholder="Write your name"
+                                    style="height: 40px; box-shadow: none; border: 1px solid #ccc;">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" 
+                    style="padding: 10px 20px;">Close</button>
+                <button type="button" class="btn btn-primary" id="sendphishingmonitor_gophish"
+                    style="padding: 10px 20px;"><i class="fa fa-paper-plane" aria-hidden="true"></i> Send Mail to Client [Gophish Test] </button>
+                <button type="button" class="btn btn-primary" id="sendphishingmonitor_apolo"
+                    style="padding: 10px 20px;" disabled><i class="fa fa-paper-plane" aria-hidden="true"></i> Send Phishing Monitor to Client [Apolo] </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{end}} {{define "scripts"}}
 <script src="/js/dist/app/passwords.min.js"></script>
 <script src="/js/dist/app/settings.min.js"></script>

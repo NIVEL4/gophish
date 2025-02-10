@@ -82,6 +82,13 @@ var api = {
 	    return query("/client", "POST", data, false)
 	}
     },
+    // client_history contains the endpoints for /client_history
+    client_history: {
+        // get() - Returns the client history data
+        get: function() {
+            return query("/client_history", "GET", {}, false);
+        }
+    },
     // campaigns contains the endpoints for /campaigns
     campaigns: {
         // get() - Queries the API for GET /campaigns
