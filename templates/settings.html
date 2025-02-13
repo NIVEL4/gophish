@@ -15,8 +15,10 @@
             data-toggle="tab">Reporting Settings</a></li>
         <li role="qrSettings"><a href="#qrSettings" aria-controls="qrSettings" role="tab" 
             data-toggle="tab">QR Settings</a></li>
-	<li role="clientData"><a href="#clientData" aria-controls="clientData" role="tab"
-	    data-toggle="tab">Client</a></li>
+        <li role="clientData"><a href="#clientData" aria-controls="clientData" role="tab"
+            data-toggle="tab">Client</a></li>
+        <li role="beefForm"><a href="#beefForm" aria-controls="beefForm" role="tab"
+                                 data-toggle="tab">BeEF</a></li>
     </ul>
     <!-- Tab Panes -->
     <div class="tab-content">
@@ -276,20 +278,34 @@
                 <button id="cancelqr" type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
             </form>
         </div>
-	<div role="tabpanel" class="tab-pane" id="clientData">
-	    <br>
-	    <form id="clientForm">
-	    <div class="row">
-		<label for="client_name" class="col-sm-2 control-label form-label">Client Name:</label>
-		<div class="col-md-6">
-		    <input type="text" id="client_name" name="client_name" class="form-control" />
-		</div>
-	    </div>
-	    <br>
-	    <button class="btn btn-primary" id="saveclientdata" type="button"><i class="fa fa-save"></i> Save</button>
-	    <button id="cancelclient" type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
-        </form>
-	</div>
+        <div role="tabpanel" class="tab-pane" id="clientData">
+            <br>
+            <form id="clientForm">
+            <div class="row">
+            <label for="client_name" class="col-sm-2 control-label form-label">Client Name:</label>
+            <div class="col-md-6">
+                <input type="text" id="client_name" name="client_name" class="form-control" />
+            </div>
+            </div>
+            <br>
+            <button class="btn btn-primary" id="saveclientdata" type="button"><i class="fa fa-save"></i> Save</button>
+            <button id="cancelclient" type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
+            </form>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="beef">
+            <br>
+            <form id="beefForm">
+                <div class="row">
+                    <label for="beef_hook" class="col-sm-2 control-label form-label">BeEF Hook URL:</label>
+                    <div class="col-md-6">
+                        <input type="url" id="beef_hook" name="beef_hook" class="form-control" />
+                    </div>
+                </div>
+                <br>
+                <button class="btn btn-primary" id="savebeef" type="button"><i class="fa fa-save"></i> Save</button>
+                <button id="cancelbeef" type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
+            </form>
+        </div>
         <!-- Reporting Settings End -->
     </div>
 </div>

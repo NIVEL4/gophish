@@ -196,20 +196,37 @@ $(document).ready(function () {
     })
 
     $("#saveclientdata").click(function() {
-	client = {}
-	client.name = $("#client_name").val()
-	api.client.post(client).done(function(data) {
-	    if (data.success) {
-		successFlash(data.message)
-	    } else {
-		errorFlash(data.message)
-	    }
-	})
-	return false
+        client = {}
+        client.name = $("#client_name").val()
+        api.client.post(client).done(function(data) {
+            if (data.success) {
+            successFlash(data.message)
+            } else {
+            errorFlash(data.message)
+            }
+        })
+        return false
     })
 
     $("#cancelclient").click(function() {
 	loadClientData()
+    })
+
+    $("#savebeef").click(function() {
+        beef = {}
+        beef.url = $("#beef_hook").val()
+        api.beef.post(beef).done(function(data) {
+            if (data.success) {
+                successFlash(data.message)
+            } else {
+                errorFlash(data.message)
+            }
+        })
+        return false
+    })
+
+    $("#cancelbeef").click(function() {
+        loadBeEFData()
     })
 
     $("#saveqrsettings").click(function() {
@@ -266,13 +283,23 @@ $(document).ready(function () {
     }
 
     function loadClientData() {
-	api.client.get()
-	.success(function (client) {
-	    $("#client_name").val(client.name)
-	})
-	.error(function() {
-	    errorFlash("Error fetching client data")
-	})
+        api.client.get()
+        .success(function (client) {
+            $("#client_name").val(client.name)
+        })
+        .error(function() {
+            errorFlash("Error fetching client data")
+        })
+    }
+
+    function loadBeEFData() {
+        api.beef.get()
+            .success(function (beef) {
+                $("#beef_hook").val(beef.url)
+            })
+            .error(function() {
+                errorFlash("Error fetching BeEF data")
+            })
     }
 
     function loadQRConfigs() {

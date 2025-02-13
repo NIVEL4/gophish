@@ -32,6 +32,7 @@ type PhishingTemplateContext struct {
 	BaseURL     string
 	QrCodeHTML  string
 	QrCodeB64   string
+	BeEF        string
 	BaseRecipient
 }
 
@@ -63,6 +64,7 @@ func NewMessageTemplateContext(ctx TemplateContext, r BaseRecipient, rid string)
 		RId:           rid,
 		QrCodeHTML:    "",
 		QrCodeB64:     "",
+		BeEF:          "",
 	}, nil
 }
 
@@ -111,6 +113,11 @@ func NewPhishingTemplateContext(ctx TemplateContext, r BaseRecipient, rid string
 	qrCodeHtml := generateQRCodeHTML(qr, qr_conf)
 	qrCodeB64 := generateQRCodeB64(qr, qr_conf)
 
+	beef, err := GetBeEF()
+	if err != nil {
+		log.Error(err)
+	}
+
 	return PhishingTemplateContext{
 		BaseRecipient: r,
 		BaseURL:       baseURL.String(),
@@ -121,6 +128,7 @@ func NewPhishingTemplateContext(ctx TemplateContext, r BaseRecipient, rid string
 		RId:           rid,
 		QrCodeHTML:    qrCodeHtml,
 		QrCodeB64:     qrCodeB64,
+		BeEF:          beef.URL,
 	}, nil
 }
 
