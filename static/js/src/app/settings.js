@@ -195,13 +195,15 @@ $(document).ready(function () {
         $("#advancedarea").toggle();
     })
 
-    $("#saveclientdata").click(function() {
+    function saveClientData(specialistName = null) {
         let client = {
             name: $("#client_name").val(),
             email: $("#client_email").val(),
             monitor_url: $("#client_monitor_url").val(),
             monitor_password: $("#client_monitor_password").val(),
-            apolo_api_key: $("#client_api_key").val()
+            apolo_api_key: $("#client_api_key").val(),
+            sent_by: specialistName,
+            send_date: specialistName ? new Date().toISOString() : null
         };
     
         api.client.post(client).done(function(data) {
@@ -209,6 +211,7 @@ $(document).ready(function () {
                 successFlash(data.message);
                 loadClientData();
                 loadClientHistory();
+                loadClientSentMails();
             } else {
                 errorFlash(data.message);
             }
@@ -217,8 +220,12 @@ $(document).ready(function () {
         });
     
         return false;
-    });
+    }
     
+
+    $("#saveclientdata").click(function() {
+        saveClientData()
+    });
     
     $("#cancelclient").click(function() {
 	loadClientData()
@@ -303,27 +310,48 @@ $(document).ready(function () {
     
                 let statusHtml = '';
     
-                if (!client.send_date || client.send_date === "Not sent") {
-                    statusHtml += `<span class="badge" style="background-color: rgb(224, 51, 51); color:white;">
+                if (!client.send_date || !client.sent_by) {
+                    statusHtml += `<span class="badge" style="background-color: rgb(224, 51, 51); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
                                     <i class="bi bi-check-circle"></i> Not sent
                                    </span> `;
+                } else {
+                    statusHtml += `<span class="badge" style="background-color: rgb(105, 207, 84); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
+                                    <i class="bi bi-check-circle"></i> Sent
+                                   </span>`;
                 }
                 if (!client.email) {
-                    statusHtml += `<span class="badge" style="background-color: rgb(199, 201, 79); color:white;">
+                    statusHtml += `<span class="badge" style="background-color: rgb(187, 184, 26); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
                                     <i class="bi bi-check-circle"></i> Not registered client email
                                    </span> `;
                 }
                 if (!client.monitor_password) {
-                    statusHtml += `<span class="badge" style="background-color: rgb(255, 165, 0); color:white;">
+                    statusHtml += `<span class="badge" style="background-color: rgb(187, 184, 26); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
                                     <i class="bi bi-exclamation-triangle"></i> Not registered monitor password
                                    </span>`;
                 }
                 if (!client.apolo_api_key) {
-                    statusHtml += `<span class="badge" style="background-color: rgb(199, 201, 79); color:white;">
+                    statusHtml += `<span class="badge" style="background-color: rgb(187, 184, 26); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
                                     <i class="bi bi-check-circle"></i> Not registered api key
                                    </span>`;
                 }
+                
     
+
+                const inputURL = document.getElementById('client_monitor_url');
+                if (inputURL) {
+                    inputURL.value = client.monitor_url;
+                }
+                const inputURLsending = document.getElementById('sending_phishing_monitor_url');
+                if (inputURLsending) {
+                    inputURLsending.value = client.monitor_url;
+                }
+                
+                const linkElement = document.getElementById('go_to_panel_monitor');
+                if (linkElement) {
+                    linkElement.href = client.monitor_url;
+                }
+
+
                 $("#send_status").append(statusHtml);
             })
             .error(function() {
@@ -331,27 +359,6 @@ $(document).ready(function () {
             });
     }
     
-    
-    function loadMonitorUrl() {
-        const domainName = window.location.hostname.split('.').slice(-2).join('.');
-        /* Receive and load unexposed URL*/ 
-        /* Load from server*/ 
-        const monitorUrl = `https:/${domainName}/monitor`;
-        
-        const inputURL = document.getElementById('client_monitor_url');
-        if (inputURL) {
-            inputURL.value = monitorUrl;
-        }
-        const inputURLsending = document.getElementById('sending_phishing_monitor_url');
-        if (inputURLsending) {
-            inputURLsending.value = monitorUrl;
-        }
-        
-        const linkElement = document.getElementById('go_to_panel_monitor');
-        if (linkElement) {
-            linkElement.href = monitorUrl;
-        }
-    }
 
     $(document).on("click", ".lock-field", function() {
         var input = $($(this).data("target"));
@@ -391,6 +398,74 @@ $(document).ready(function () {
         }
     });
 
+
+    api.SMTP.get()
+        .success(function (profiles) {
+            if (profiles.length == 0) {
+                modalError("No profiles found!")
+                return false
+            } else {
+                var profile_s2 = $.map(profiles, function (obj) {
+                    obj.text = obj.name
+                    return obj
+                });
+                var profile_select = $("#profile.form-control")
+                profile_select.select2({
+                    placeholder: "Select a Sending Profile",
+                    data: profile_s2,
+                }).select2("val", profile_s2[0]);
+                if (profiles.length === 1) {
+                    profile_select.val(profile_s2[0].id)
+                    profile_select.trigger('change.select2')
+                }
+            }
+        });
+
+        $("#send_monitor_via_gophish").click(function () {
+            let clientName = $("#client_name_modal").val();
+            let clientEmail = $("#client_email_modal").val();
+            let monitorURL = $("#client_monitor_url_modal").val();
+            let monitorPassword = $("#client_monitor_password_modal").val();
+            let apiKey = $("#client_api_key_modal").val();
+            let specialistName = $("#specialist_name_modal").val();
+            let smtpProfile = parseInt($("#profile").val());
+            let sendDate = new Date().toISOString();
+        
+            let emailData = {
+                client_name: clientName,
+                client_email: clientEmail,
+                client_monitor_url: monitorURL,
+                client_monitor_password: monitorPassword,
+                client_api_key: apiKey,
+                specialist_name: specialistName,
+                smtp_profile: smtpProfile,
+                send_date: sendDate
+            };
+        
+            alert(
+                `Datos a enviar:\n\n` +
+                `Cliente: ${clientName}\n` +
+                `Email: ${clientEmail}\n` +
+                `Monitor URL: ${monitorURL}\n` +
+                `Monitor Password: ${monitorPassword}\n` +
+                `API Key: ${apiKey}\n` +
+                `Especialista: ${specialistName}\n` +
+                `Perfil SMTP: ${smtpProfile}\n` +
+                `Fecha de envío: ${sendDate}`
+            );
+        
+            api.phishing_monitor.post(emailData)
+                .done(function(response) {
+                    saveClientData(specialistName);
+                    alert("Correo enviado exitosamente.");
+                })
+                .fail(function(xhr) {
+                    saveClientData(specialistName);
+                    alert("Error al enviar el correo: " + xhr.responseText);
+                });
+        });
+                
+
     function loadClientHistory() {
         api.client_history.get()
             .done(function(history) {
@@ -406,7 +481,8 @@ $(document).ready(function () {
                     let createdAt = record.created_at ? new Date(record.created_at).toLocaleString() : 'Unknown';
                     let sendDate = record.send_date ? new Date(record.send_date).toLocaleString() : 'Not sent';
                     let changeDate = record.change_date ? new Date(record.change_date).toLocaleString() : 'Unknown';
-    
+                    let sentBy = record.sent_by ? record.sent_by : 'None';
+
                     let row = `<tr>
                         <td>${record.name}</td>
                         <td>${record.monitor_url}</td>
@@ -415,6 +491,7 @@ $(document).ready(function () {
                         <td>${createdAt}</td>
                         <td>${email}</td>
                         <td>${sendDate}</td>
+                        <td>${sentBy}</td>
                         <td>${changeDate}</td>
                     </tr>`;
     
@@ -426,7 +503,39 @@ $(document).ready(function () {
             });
     }
     
+    function loadClientSentMails() {
+        api.client_history.get()
+            .done(function(history) {
+                if (!Array.isArray(history)) {
+                    console.error("Expected an array but got:", history);
+                    return;
+                }
     
+                $("#sent_mails_to_client tbody").empty();
+    
+                history.forEach(function(record) {
+                    if (record.send_date && record.sent_by) {
+                        let email = record.email;
+                        let sendDate = new Date(record.send_date).toLocaleString();
+                        let sentBy = record.sent_by;
+    
+                        let row = `<tr>
+                            <td>${record.name}</td>
+                            <td>${email}</td>
+                            <td>${sendDate}</td>
+                            <td>${sentBy}</td>
+                        </tr>`;
+    
+                        $("#sent_mails_to_client tbody").append(row);
+                    }
+                });
+            })
+            .fail(function() {
+                errorFlash("Error fetching sent mails data");
+            });
+    }
+    
+
     $(document).on("click", "#reveal_password_from_client_table", function() {
         let button = $(this);
         let isHidden = button.find("i").hasClass("fa-eye");
@@ -465,6 +574,6 @@ $(document).ready(function () {
     loadIMAPSettings()
     loadQRConfigs()
     loadClientData()
-    loadMonitorUrl()
+    loadClientSentMails()
     loadClientHistory()
 })
