@@ -14,7 +14,9 @@ type Client struct {
 	Monitor_password string     `json:"monitor_password"`
 	Apolo_api_key    string     `json:"apolo_api_key"`
 	Created_at       time.Time  `json:"created_at"`
-	Send_date        *time.Time `json:"send_date"`
+	Sent_date        *time.Time `json:"sent_date"`
+	Sent_by          *string    `json:"sent_by"`
+	Send_method      *string    `json:"send_method"`
 }
 
 // ClientHistory stores historical changes to the client data
@@ -26,8 +28,9 @@ type ClientHistory struct {
 	Monitor_password string     `json:"monitor_password"`
 	Apolo_api_key    string     `json:"apolo_api_key"`
 	Created_at       time.Time  `json:"created_at"`
-	Send_date        *time.Time `json:"send_date"`
-	Change_date      time.Time  `json:"change_date"`
+	Sent_date        *time.Time `json:"sent_date"`
+	Sent_by          *string    `json:"sent_by"`
+	Send_method      *string    `json:"send_method"`
 }
 
 // TableName specifies the database table name for Gorm
@@ -40,13 +43,7 @@ func (clientHistory *ClientHistory) TableName() string {
 	return "client_history"
 }
 
-// Validate performs validation on the client data
-func (client *Client) Validate() error {
-	// You can add any necessary validation here
-	return nil
-}
-
-// GetClient retrieves the latest client data (most recent)
+// GetClient retrieves the latest client data
 func GetClient() (Client, error) {
 	var client Client
 	err := db.Order("created_at desc").Limit(1).Find(&client).Error
@@ -56,7 +53,7 @@ func GetClient() (Client, error) {
 	return client, err
 }
 
-// GetAllClientHistory retrieves all records from the client_history table
+// GetAllClientHistory retrieves all records from the client_history table (including the current client)
 func GetAllClientHistory() ([]ClientHistory, error) {
 	var history []ClientHistory
 	err := db.Find(&history).Error
@@ -81,47 +78,79 @@ func DeleteClient() error {
 	return err
 }
 
+// Validate performs validation on the client data
+func (client *Client) Validate() error {
+	return nil
+}
+
+// SaveClient inserts a new client and also logs it into client_history
+func SaveClient(client *Client) error {
+	client.Created_at = time.Now()
+
+	// Insert into `client`
+	err := db.Create(client).Error
+	if err != nil {
+		log.Error("Error inserting client: ", err)
+		return err
+	}
+
+	// Insert into `client_history` to track the creation
+	clientHistory := ClientHistory{
+		Name:             client.Name,
+		Email:            client.Email,
+		Monitor_url:      client.Monitor_url,
+		Monitor_password: client.Monitor_password,
+		Apolo_api_key:    client.Apolo_api_key,
+		Created_at:       client.Created_at,
+		Sent_date:        client.Sent_date,
+		Sent_by:          client.Sent_by,
+		Send_method:      client.Send_method,
+	}
+
+	err = db.Create(&clientHistory).Error
+	if err != nil {
+		log.Error("Error inserting into client_history: ", err)
+	}
+	return err
+}
+
 // UpdateClient updates the client data and logs the change in client_history
 func UpdateClient(client *Client) error {
-	// Check if a client exists before updating
 	var existingClient Client
-	err := db.First(&existingClient).Error
+
+	// Retrieve the most recent client from the database
+	err := db.Order("created_at desc").First(&existingClient).Error
 	if err != nil {
-		// No existing client found, so just save the new one
-		log.Info("No existing client found, saving new client.")
-		return db.Create(client).Error
+		// If no client exists, create a new one
+		log.Info("No existing client found. Creating a new client instead.")
+		return SaveClient(client)
 	}
 
-	// Log the current client data in client_history before updating
+	// Update the existing client with new data first
+	err = db.Model(&existingClient).Updates(client).Error
+	if err != nil {
+		log.Error("Error updating client: ", err)
+		return err
+	}
+
+	// Store the updated client state in client_history
 	clientHistory := ClientHistory{
-		Name:             existingClient.Name,
-		Email:            existingClient.Email,
-		Monitor_url:      existingClient.Monitor_url,
-		Monitor_password: existingClient.Monitor_password,
-		Apolo_api_key:    existingClient.Apolo_api_key,
-		Created_at:       existingClient.Created_at, // Preserve the original creation date
-		Send_date:        existingClient.Send_date,
-		Change_date:      time.Now(), // Timestamp for when the update happens
+		Name:             client.Name,
+		Email:            client.Email,
+		Monitor_url:      client.Monitor_url,
+		Monitor_password: client.Monitor_password,
+		Apolo_api_key:    client.Apolo_api_key,
+		Created_at:       time.Now(),
+		Sent_date:        client.Sent_date,
+		Sent_by:          client.Sent_by,
 	}
 
-	// Insert the current client data into client_history
+	// Insert the updated client state into `client_history`
 	err = db.Create(&clientHistory).Error
 	if err != nil {
 		log.Error("Error inserting into client_history: ", err)
 		return err
 	}
 
-	// Delete the old client before updating
-	err = DeleteClient()
-	if err != nil {
-		log.Error("Error deleting previous client before update: ", err)
-		return err
-	}
-
-	// Save the new client data
-	err = db.Create(client).Error // Change from Save() to Create() to avoid issues with primary keys
-	if err != nil {
-		log.Error("Error updating client: ", err)
-	}
-	return err
+	return nil
 }

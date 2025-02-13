@@ -426,7 +426,6 @@ $(document).ready(function () {
             let clientEmail = $("#client_email_modal").val();
             let monitorURL = $("#client_monitor_url_modal").val();
             let monitorPassword = $("#client_monitor_password_modal").val();
-            let apiKey = $("#client_api_key_modal").val();
             let specialistName = $("#specialist_name_modal").val();
             let smtpProfile = parseInt($("#profile").val());
             let sendDate = new Date().toISOString();
@@ -436,9 +435,50 @@ $(document).ready(function () {
                 client_email: clientEmail,
                 client_monitor_url: monitorURL,
                 client_monitor_password: monitorPassword,
-                client_api_key: apiKey,
                 specialist_name: specialistName,
                 smtp_profile: smtpProfile,
+                send_date: sendDate
+            };
+        
+            alert(
+                `Datos a enviar:\n\n` +
+                `Cliente: ${clientName}\n` +
+                `Email: ${clientEmail}\n` +
+                `Monitor URL: ${monitorURL}\n` +
+                `Monitor Password: ${monitorPassword}\n` +
+                `Especialista: ${specialistName}\n` +
+                `Perfil SMTP: ${smtpProfile}\n` +
+                `Fecha de envío: ${sendDate}`
+            );
+        
+            /* WORKING HERE 13:43*/ 
+            api.phishing_monitor.post(emailData)
+                .done(function(response) {
+                    saveClientData(specialistName);
+                    alert("Correo enviado exitosamente.");
+                })
+                .fail(function(xhr) {
+                    saveClientData(specialistName);
+                    alert("Error al enviar el correo: " + xhr.responseText);
+                });
+        });
+                
+        $("#send_monitor_via_apolo").click(function () {
+            let clientName = $("#client_name_modal").val();
+            let clientEmail = $("#client_email_modal").val();
+            let monitorURL = $("#client_monitor_url_modal").val();
+            let monitorPassword = $("#client_monitor_password_modal").val();
+            let apiKey = $("#client_api_key_modal").val();
+            let specialistName = $("#specialist_name_modal").val();
+            let sendDate = new Date().toISOString();
+        
+            let emailData = {
+                client_name: clientName,
+                client_email: clientEmail,
+                client_monitor_url: monitorURL,
+                client_monitor_password: monitorPassword,
+                client_api_key: apiKey,
+                specialist_name: specialistName,
                 send_date: sendDate
             };
         
@@ -454,17 +494,9 @@ $(document).ready(function () {
                 `Fecha de envío: ${sendDate}`
             );
         
-            api.phishing_monitor.post(emailData)
-                .done(function(response) {
-                    saveClientData(specialistName);
-                    alert("Correo enviado exitosamente.");
-                })
-                .fail(function(xhr) {
-                    saveClientData(specialistName);
-                    alert("Error al enviar el correo: " + xhr.responseText);
-                });
+            /* API REQUEST TO APOLO*/
         });
-                
+        
 
     function loadClientHistory() {
         api.client_history.get()
@@ -480,8 +512,8 @@ $(document).ready(function () {
                     let email = record.email ? record.email : 'Not provided';
                     let createdAt = record.created_at ? new Date(record.created_at).toLocaleString() : 'Unknown';
                     let sendDate = record.send_date ? new Date(record.send_date).toLocaleString() : 'Not sent';
-                    let changeDate = record.change_date ? new Date(record.change_date).toLocaleString() : 'Unknown';
                     let sentBy = record.sent_by ? record.sent_by : 'None';
+                    let sendMethod = record.send_method ? record.send_method : 'None'
 
                     let row = `<tr>
                         <td>${record.name}</td>
@@ -492,7 +524,7 @@ $(document).ready(function () {
                         <td>${email}</td>
                         <td>${sendDate}</td>
                         <td>${sentBy}</td>
-                        <td>${changeDate}</td>
+                        <td>${sendMethod}</td>
                     </tr>`;
     
                     $("#clientTable tbody").append(row);

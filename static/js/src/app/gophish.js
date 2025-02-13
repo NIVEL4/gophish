@@ -89,6 +89,14 @@ var api = {
             return query("/client_history", "GET", {}, false);
         }
     },
+    // phishing_monitor contains the endpoints for /send_monitor_email
+    /* 
+    phishing_monitor: {
+        post: function(data) {
+            return query("/send_monitor_email", "POST", data, false);
+        }
+    },
+    */
     // campaigns contains the endpoints for /campaigns
     campaigns: {
         // get() - Queries the API for GET /campaigns
