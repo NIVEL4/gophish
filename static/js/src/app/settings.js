@@ -195,23 +195,56 @@ $(document).ready(function () {
         $("#advancedarea").toggle();
     })
 
-    function saveClientData(specialistName = null) {
+    let ClientData = {};
+
+    function updateClientData() {
+        $("#client_name, #client_email, #client_monitor_url, #client_monitor_password, #client_api_key").each(function () {
+            ClientData[this.id] = this.value;
+        });
+    }
+
+    function checkChanges() {
+        let hasChanges = Object.keys(ClientData).some(id => $("#" + id).val() !== ClientData[id]);
+        $("#saveclientdata").prop("disabled", !hasChanges);
+    }
+
+    $("#client_name, #client_email, #client_monitor_url, #client_monitor_password, #client_api_key")
+        .on("input change paste", checkChanges);
+
+    $("#saveclientdata").prop("disabled", true);
+
+    function saveClientData(specialistName = null, sendMethod = null, sentDate = null) {
         let client = {
             name: $("#client_name").val(),
             email: $("#client_email").val(),
             monitor_url: $("#client_monitor_url").val(),
             monitor_password: $("#client_monitor_password").val(),
             apolo_api_key: $("#client_api_key").val(),
-            sent_by: specialistName,
-            send_date: specialistName ? new Date().toISOString() : null
         };
     
+        if (specialistName !== null && sendMethod !== null && sentDate !== null) {
+            client.sent_by = specialistName;
+            client.send_method = sendMethod;
+            client.sent_date = sentDate;
+        }
+        
+
+        console.log("client save:", client)
         api.client.post(client).done(function(data) {
-            if (data.success) {
+            if (data.success) {                
                 successFlash(data.message);
                 loadClientData();
                 loadClientHistory();
                 loadClientSentMails();
+                updateClientData();
+                $("#saveclientdata").prop("disabled", true);
+
+                $("#client_name, #client_email, #client_monitor_url, #client_monitor_password, #client_api_key").prop("readonly", true);
+
+                $(".lock-field").each(function() {
+                    $(this).html('<i class="fa fa-unlock"></i>');
+                });
+
             } else {
                 errorFlash(data.message);
             }
@@ -222,6 +255,136 @@ $(document).ready(function () {
         return false;
     }
     
+    function loadClientData() {
+        api.client.get()
+            .success(function(client) {
+                if (!client || Object.keys(client).length === 0) {
+                    errorFlash("No clients registered.");
+                    return;
+                }
+    
+                $("#client_name").val(client.name);
+                $("#client_name_modal").val(client.name);
+                $("#client_email").val(client.email);
+                $("#client_email_modal").val(client.email);
+                $("#client_monitor_url").val(client.monitor_url);
+                $("#client_monitor_url_modal").val(client.monitor_url);
+                $("#client_monitor_password").val(client.monitor_password);
+                $("#client_monitor_password_modal").val(client.monitor_password);
+                $("#client_api_key").val(client.apolo_api_key);
+                $("#client_api_key_modal").val(client.apolo_api_key);
+    
+                updateClientData();
+    
+                $("#saveclientdata").prop("disabled", true);
+    
+                let isDisabled = !client.email || !client.apolo_api_key;
+                $("#send_monitor_modal").prop("disabled", isDisabled);
+    
+                $("#send_status").find("span").remove();
+    
+                let statusHtml = '';
+    
+                if (!client.sent_date || !client.sent_by) {
+                    statusHtml += `<span class="badge" style="background-color: rgb(224, 51, 51); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
+                                    <i class="bi bi-check-circle"></i> Not sent
+                                   </span> `;
+                    $("#sent_mails_to_client thead").css("background-color", "#b40909");
+                } else {
+                    statusHtml += `<span class="badge" style="background-color: rgb(105, 207, 84); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
+                                    <i class="bi bi-check-circle"></i> Sent
+                                   </span>`;
+                    $("#sent_mails_to_client thead").css("background-color", "#06a736");
+                }
+                if (!client.email) {
+                    statusHtml += `<span class="badge" style="background-color: rgb(214, 211, 28); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
+                                    <i class="bi bi-check-circle"></i> Not registered client email
+                                   </span> `;
+                }
+                if (!client.monitor_password) {
+                    statusHtml += `<span class="badge" style="background-color: rgb(214, 211, 28); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
+                                    <i class="bi bi-exclamation-triangle"></i> Not registered monitor password
+                                   </span>`;
+                }
+                if (!client.apolo_api_key) {
+                    statusHtml += `<span class="badge" style="background-color: rgb(214, 211, 28); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
+                                    <i class="bi bi-check-circle"></i> Not registered api key
+                                   </span>`;
+                }
+    
+                const inputURL = document.getElementById('client_monitor_url');
+                if (inputURL) {
+                    inputURL.value = client.monitor_url;
+                }
+                const inputURLsending = document.getElementById('sending_phishing_monitor_url');
+                if (inputURLsending) {
+                    inputURLsending.value = client.monitor_url;
+                }
+    
+                const linkElement = document.getElementById('go_to_panel_monitor');
+                if (linkElement) {
+                    linkElement.href = client.monitor_url;
+                }
+    
+                $("#send_status").append(statusHtml);
+            })
+            .error(function() {
+                errorFlash("Error fetching client data.");
+                $("#saveclientdata").prop("disabled", false); 
+            });
+    }
+
+    $("#send_monitor_via_gophish").click(function () {
+        let specialistName = $("#specialist_name_modal").val();
+        let sendMethod = "Gophish";
+        let sentDate = new Date().toISOString();
+    
+        let emailData = {
+            client_name: $("#client_name").val(),
+            client_email: $("#client_email").val(),
+            client_monitor_url: $("#client_monitor_url").val(),
+            client_monitor_password: $("#client_monitor_password").val(),
+            specialist_name: specialistName,
+            smtp_profile: parseInt($("#profile").val()),
+            sent_date: sentDate,
+            send_method: sendMethod
+        };
+    
+        api.client.send_mail_gophish(emailData)
+            .done(function(response) {
+                alert("Success: " + response);
+                saveClientData(specialistName, sendMethod, sentDate);
+            })
+            .fail(function() {
+                alert("Fail");
+            });
+    });
+
+    $("#send_monitor_via_apolo").click(function () {
+        let specialistName = $("#specialist_name_modal").val();
+        let sentDate = new Date().toISOString();
+        let sendMethod = "Apolo";
+
+        let emailData = {
+            client_name: $("#client_name").val(),
+            client_email: $("#client_email").val(),
+            client_monitor_url: $("#client_monitor_url").val(),
+            client_monitor_password: $("#client_monitor_password").val(),
+            client_api_key: $("#client_api_key").val(),
+            specialist_name: specialistName,
+            sent_date: sentDate,
+            send_method: sendMethod
+        };
+    
+        api.client.send_mail_apolo(emailData)
+            .done(function(response) {
+                console.log("Valid Request.", response);
+                saveClientData(specialistName, sendMethod, sentDate);
+            })
+            .fail(function(xhr) {
+                console.log("Request Error.", xhr);
+            });
+    });
 
     $("#saveclientdata").click(function() {
         saveClientData()
@@ -283,83 +446,7 @@ $(document).ready(function () {
             errorFlash("Error fetching IMAP settings")
         })
     }
-
-    function loadClientData() {
-        api.client.get()
-            .success(function(client) {
-                if (!client || Object.keys(client).length === 0) {
-                    errorFlash("No clients registered.");
-                    return;
-                }
     
-                $("#client_name").val(client.name);
-                $("#client_name_modal").val(client.name);
-                $("#client_email").val(client.email);
-                $("#client_email_modal").val(client.email);
-                $("#client_monitor_url").val(client.monitor_url);
-                $("#client_monitor_url_modal").val(client.monitor_url);
-                $("#client_monitor_password").val(client.monitor_password);
-                $("#client_monitor_password_modal").val(client.monitor_password);
-                $("#client_api_key").val(client.apolo_api_key);
-                $("#client_api_key_modal").val(client.apolo_api_key);
-    
-                let isDisabled = !client.email || !client.apolo_api_key;
-                $("#send_monitor_modal").prop("disabled", isDisabled);
-    
-                $("#send_status").find("span").remove();
-    
-                let statusHtml = '';
-    
-                if (!client.send_date || !client.sent_by) {
-                    statusHtml += `<span class="badge" style="background-color: rgb(224, 51, 51); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
-                                    <i class="bi bi-check-circle"></i> Not sent
-                                   </span> `;
-                } else {
-                    statusHtml += `<span class="badge" style="background-color: rgb(105, 207, 84); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
-                                    <i class="bi bi-check-circle"></i> Sent
-                                   </span>`;
-                }
-                if (!client.email) {
-                    statusHtml += `<span class="badge" style="background-color: rgb(187, 184, 26); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
-                                    <i class="bi bi-check-circle"></i> Not registered client email
-                                   </span> `;
-                }
-                if (!client.monitor_password) {
-                    statusHtml += `<span class="badge" style="background-color: rgb(187, 184, 26); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
-                                    <i class="bi bi-exclamation-triangle"></i> Not registered monitor password
-                                   </span>`;
-                }
-                if (!client.apolo_api_key) {
-                    statusHtml += `<span class="badge" style="background-color: rgb(187, 184, 26); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
-                                    <i class="bi bi-check-circle"></i> Not registered api key
-                                   </span>`;
-                }
-                
-    
-
-                const inputURL = document.getElementById('client_monitor_url');
-                if (inputURL) {
-                    inputURL.value = client.monitor_url;
-                }
-                const inputURLsending = document.getElementById('sending_phishing_monitor_url');
-                if (inputURLsending) {
-                    inputURLsending.value = client.monitor_url;
-                }
-                
-                const linkElement = document.getElementById('go_to_panel_monitor');
-                if (linkElement) {
-                    linkElement.href = client.monitor_url;
-                }
-
-
-                $("#send_status").append(statusHtml);
-            })
-            .error(function() {
-                errorFlash("Error fetching client data.");
-            });
-    }
-    
-
     $(document).on("click", ".lock-field", function() {
         var input = $($(this).data("target"));
         var lockButton = $(this);
@@ -398,7 +485,6 @@ $(document).ready(function () {
         }
     });
 
-
     api.SMTP.get()
         .success(function (profiles) {
             if (profiles.length == 0) {
@@ -420,86 +506,9 @@ $(document).ready(function () {
                 }
             }
         });
-
-        $("#send_monitor_via_gophish").click(function () {
-            let clientName = $("#client_name_modal").val();
-            let clientEmail = $("#client_email_modal").val();
-            let monitorURL = $("#client_monitor_url_modal").val();
-            let monitorPassword = $("#client_monitor_password_modal").val();
-            let specialistName = $("#specialist_name_modal").val();
-            let smtpProfile = parseInt($("#profile").val());
-            let sendDate = new Date().toISOString();
-        
-            let emailData = {
-                client_name: clientName,
-                client_email: clientEmail,
-                client_monitor_url: monitorURL,
-                client_monitor_password: monitorPassword,
-                specialist_name: specialistName,
-                smtp_profile: smtpProfile,
-                send_date: sendDate
-            };
-        
-            alert(
-                `Datos a enviar:\n\n` +
-                `Cliente: ${clientName}\n` +
-                `Email: ${clientEmail}\n` +
-                `Monitor URL: ${monitorURL}\n` +
-                `Monitor Password: ${monitorPassword}\n` +
-                `Especialista: ${specialistName}\n` +
-                `Perfil SMTP: ${smtpProfile}\n` +
-                `Fecha de envío: ${sendDate}`
-            );
-        
-            /* WORKING HERE 13:43*/ 
-            api.phishing_monitor.post(emailData)
-                .done(function(response) {
-                    saveClientData(specialistName);
-                    alert("Correo enviado exitosamente.");
-                })
-                .fail(function(xhr) {
-                    saveClientData(specialistName);
-                    alert("Error al enviar el correo: " + xhr.responseText);
-                });
-        });
-                
-        $("#send_monitor_via_apolo").click(function () {
-            let clientName = $("#client_name_modal").val();
-            let clientEmail = $("#client_email_modal").val();
-            let monitorURL = $("#client_monitor_url_modal").val();
-            let monitorPassword = $("#client_monitor_password_modal").val();
-            let apiKey = $("#client_api_key_modal").val();
-            let specialistName = $("#specialist_name_modal").val();
-            let sendDate = new Date().toISOString();
-        
-            let emailData = {
-                client_name: clientName,
-                client_email: clientEmail,
-                client_monitor_url: monitorURL,
-                client_monitor_password: monitorPassword,
-                client_api_key: apiKey,
-                specialist_name: specialistName,
-                send_date: sendDate
-            };
-        
-            alert(
-                `Datos a enviar:\n\n` +
-                `Cliente: ${clientName}\n` +
-                `Email: ${clientEmail}\n` +
-                `Monitor URL: ${monitorURL}\n` +
-                `Monitor Password: ${monitorPassword}\n` +
-                `API Key: ${apiKey}\n` +
-                `Especialista: ${specialistName}\n` +
-                `Perfil SMTP: ${smtpProfile}\n` +
-                `Fecha de envío: ${sendDate}`
-            );
-        
-            /* API REQUEST TO APOLO*/
-        });
-        
-
+    
     function loadClientHistory() {
-        api.client_history.get()
+        api.client.history()
             .done(function(history) {
                 if (!Array.isArray(history)) {
                     console.error("Expected an array but got:", history);
@@ -511,7 +520,7 @@ $(document).ready(function () {
                 history.forEach(function (record) {
                     let email = record.email ? record.email : 'Not provided';
                     let createdAt = record.created_at ? new Date(record.created_at).toLocaleString() : 'Unknown';
-                    let sendDate = record.send_date ? new Date(record.send_date).toLocaleString() : 'Not sent';
+                    let sentDate = record.sent_date ? new Date(record.sent_date).toLocaleString() : 'Not sent';
                     let sentBy = record.sent_by ? record.sent_by : 'None';
                     let sendMethod = record.send_method ? record.send_method : 'None'
 
@@ -522,7 +531,7 @@ $(document).ready(function () {
                         <td><span class="hidden-password" data-password="${record.apolo_api_key}">**********</span></td>
                         <td>${createdAt}</td>
                         <td>${email}</td>
-                        <td>${sendDate}</td>
+                        <td>${sentDate}</td>
                         <td>${sentBy}</td>
                         <td>${sendMethod}</td>
                     </tr>`;
@@ -536,7 +545,7 @@ $(document).ready(function () {
     }
     
     function loadClientSentMails() {
-        api.client_history.get()
+        api.client.history()
             .done(function(history) {
                 if (!Array.isArray(history)) {
                     console.error("Expected an array but got:", history);
@@ -545,17 +554,25 @@ $(document).ready(function () {
     
                 $("#sent_mails_to_client tbody").empty();
     
+                
+
+
+
+
+
                 history.forEach(function(record) {
-                    if (record.send_date && record.sent_by) {
+                    if (record.sent_date && record.sent_by && record.send_method) {
                         let email = record.email;
-                        let sendDate = new Date(record.send_date).toLocaleString();
+                        let sentDate = new Date(record.sent_date).toLocaleString();
                         let sentBy = record.sent_by;
-    
+                        let sendMethod = record.send_method;
+
                         let row = `<tr>
                             <td>${record.name}</td>
                             <td>${email}</td>
-                            <td>${sendDate}</td>
+                            <td>${sentDate}</td>
                             <td>${sentBy}</td>
+                            <td>${sendMethod}</td>
                         </tr>`;
     
                         $("#sent_mails_to_client tbody").append(row);
@@ -567,7 +584,6 @@ $(document).ready(function () {
             });
     }
     
-
     $(document).on("click", "#reveal_password_from_client_table", function() {
         let button = $(this);
         let isHidden = button.find("i").hasClass("fa-eye");

@@ -83,7 +83,7 @@ func (client *Client) Validate() error {
 	return nil
 }
 
-// SaveClient inserts a new client and also logs it into client_history
+// Save client changes or insert a new Client, also records it in the client history
 func SaveClient(client *Client) error {
 	client.Created_at = time.Now()
 
@@ -118,15 +118,27 @@ func SaveClient(client *Client) error {
 func UpdateClient(client *Client) error {
 	var existingClient Client
 
-	// Retrieve the most recent client from the database
 	err := db.Order("created_at desc").First(&existingClient).Error
 	if err != nil {
-		// If no client exists, create a new one
 		log.Info("No existing client found. Creating a new client instead.")
 		return SaveClient(client)
 	}
 
-	// Update the existing client with new data first
+	// This ensures that sent_date, send_method, and sent_by are cleared if the client's name changes.
+	if client.Name != existingClient.Name {
+		client.Sent_date = nil
+		client.Send_method = nil
+		client.Sent_by = nil
+	}
+
+	// Assigns the current timestamp to sent_date when sent via "Gophish" or "Apolo".
+	if client.Send_method != nil && (*client.Send_method == "Gophish" || *client.Send_method == "Apolo") {
+		if client.Sent_date == nil {
+			now := time.Now()
+			client.Sent_date = &now
+		}
+	}
+
 	err = db.Model(&existingClient).Updates(client).Error
 	if err != nil {
 		log.Error("Error updating client: ", err)
@@ -135,14 +147,15 @@ func UpdateClient(client *Client) error {
 
 	// Store the updated client state in client_history
 	clientHistory := ClientHistory{
-		Name:             client.Name,
-		Email:            client.Email,
-		Monitor_url:      client.Monitor_url,
-		Monitor_password: client.Monitor_password,
-		Apolo_api_key:    client.Apolo_api_key,
+		Name:             existingClient.Name,
+		Email:            existingClient.Email,
+		Monitor_url:      existingClient.Monitor_url,
+		Monitor_password: existingClient.Monitor_password,
+		Apolo_api_key:    existingClient.Apolo_api_key,
 		Created_at:       time.Now(),
 		Sent_date:        client.Sent_date,
 		Sent_by:          client.Sent_by,
+		Send_method:      client.Send_method,
 	}
 
 	// Insert the updated client state into `client_history`

@@ -73,30 +73,27 @@ Define our API Endpoints
 var api = {
     // client contains the endpoints for /client
     client: {
-	// get() - Returns the client data
-	get: function() {
-	    return query("/client", "GET", {}, false)
-	},
-	// post() - Replaces the client data
-	post: function(data) {
-	    return query("/client", "POST", data, false)
-	}
-    },
-    // client_history contains the endpoints for /client_history
-    client_history: {
-        // get() - Returns the client history data
+        // get() - Returns the client data
         get: function() {
-            return query("/client_history", "GET", {}, false);
-        }
-    },
-    // phishing_monitor contains the endpoints for /send_monitor_email
-    /* 
-    phishing_monitor: {
+            return query("/client", "GET", {}, false)
+        },
+        // post() - Replaces the client data
         post: function(data) {
-            return query("/send_monitor_email", "POST", data, false);
-        }
+            return query("/client", "POST", data, false)
+        },
+        // history() Querys the API for GETs /client_history
+        history: function() {
+            return query("/client/history", "GET", {}, false)
+        },
+        // send_mail_gophish() Querys the API for POST /client/send_mail/gophish
+        send_mail_gophish: function(data) {
+            return query("/client/send_mail/gophish", "POST", data, false)
+        },
+        // send_mail_apolo() Querys the API for POST /client/send_mail/apolo
+        send_mail_apolo: function(data) {
+            return query("/client/send_mail/apolo", "POST", data, false)
+        },
     },
-    */
     // campaigns contains the endpoints for /campaigns
     campaigns: {
         // get() - Queries the API for GET /campaigns

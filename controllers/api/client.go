@@ -33,7 +33,7 @@ func (as *Server) Client(w http.ResponseWriter, r *http.Request) {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
 			return
 		}
-		// Save or Update the client in case of doesnt exist and record the change in history
+		// Save new client or update in case of doesnt exist and save the change in history records.
 		err = models.UpdateClient(&client)
 		if err != nil {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)

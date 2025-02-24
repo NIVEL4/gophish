@@ -302,7 +302,7 @@
                             <div class="input-group-addon" style="background-color: #27224F; min-width:45px;">
                                 <i class="fa fa-envelope"></i>
                             </div>
-                            <input type="email" id="client_email" name="client_email" class="form-control" placeholder="email@client.TLD" required readonly />
+                            <input type="email" id="client_email" name="client_email" class="form-control" placeholder="email@client.TLD" required readonly/>
                         </div>
                     </div>
                     <div class="col-md-2">
@@ -320,7 +320,7 @@
                             <div class="input-group-addon" style="background-color: #27224F; min-width:45px;">
                                 <i class="fa fa-link"></i>
                             </div>
-                            <input type="text" id="client_monitor_url" name="client_monitor_url" class="form-control" placeholder="https://[...].tld"/>
+                            <input type="text" id="client_monitor_url" name="client_monitor_url" class="form-control" placeholder="https://[...].tld" required readonly/>
                         </div>
                     </div>
                     <div class="col-md-2 d-flex">
@@ -330,6 +330,9 @@
                         <a href="" class="btn btn-info" role="button" id="go_to_panel_monitor" target="_blank">
                             <i class="fa fa-link"></i> Go to panel
                         </a>
+                        <button class="btn btn-primary lock-field" data-target="#client_monitor_url" type="button">
+                            <i class="fa fa-unlock"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="row align-items-center">
@@ -339,7 +342,7 @@
                             <div class="input-group-addon" style="background-color: #27224F; min-width:45px;">
                                 <i class="fa fa-key"></i>
                             </div>
-                            <input type="password" id="client_monitor_password" name="client_monitor_password" class="form-control" placeholder="********************************************************************"/>
+                            <input type="password" id="client_monitor_password" name="client_monitor_password" class="form-control" placeholder="********************************************************************" required readonly/>
                         </div>
                     </div>
                     <div class="col-md-2 d-flex">
@@ -348,6 +351,9 @@
                         </button>
                         <button class="btn btn-danger reveal-password me-2" data-target="#client_monitor_password" type="button">
                             <i class="fa fa-eye"></i>
+                        </button>
+                        <button class="btn btn-primary lock-field" data-target="#client_monitor_password" type="button">
+                            <i class="fa fa-unlock"></i>
                         </button>
                     </div>
                 </div>
@@ -359,7 +365,7 @@
                             <div class="input-group-addon" style="background-color: #27224F; min-width:45px;">
                                 <i class="fa fa-rocket"></i>
                             </div>
-                            <input type="password" id="client_api_key" name="client_api_key" class="form-control" placeholder="********************************************************************"/>
+                            <input type="password" id="client_api_key" name="client_api_key" class="form-control" placeholder="********************************************************************" required readonly/>
                         </div>
                     </div>
                     <div class="col-md-2 d-flex">
@@ -369,6 +375,9 @@
                         </button>
                         <button type="button" class="btn btn-danger reveal-password" data-target="#client_api_key">
                             <i class="fa fa-eye"></i>
+                        </button>
+                        <button class="btn btn-primary lock-field" data-target="#client_api_key" type="button">
+                            <i class="fa fa-unlock"></i>
                         </button>
                     </div>
                 </div>
@@ -388,12 +397,12 @@
                     <label style="font-size: 1.3rem;">Status:</label>    
                 </div>
             </div>                       
-            <button type="button" class="btn btn-primary" id="send_monitor_modal" data-toggle="modal" data-backdrop="static" data-user-id="-1" data-target="#modal" disabled> <i class="fa fa-envelope">
+            <button type="button" class="btn btn-primary" id="send_monitor_modal" data-toggle="modal" data-backdrop="static" data-user-id="-1" data-target="#send_access_modal" disabled> <i class="fa fa-envelope">
             </i> Send phishing monitor to client
             </button>
             <p class="text-center"><i class="fa fa-envelope" aria-hidden="true"></i> Sent mails</p>
             <table id="sent_mails_to_client" class="table table-striped table-bordered table-hover">
-                <thead style="background-color: #06a736; color: white;">
+                <thead style="background-color: rgb(201, 47, 47); color: white;">
                     <tr>
                         <th class="col"><i class="fa fa-user" aria-hidden="true"></i> Client</th>
                         <th class="col"><i class="fa fa-envelope" aria-hidden="true"></i> Email</th>
@@ -436,35 +445,45 @@
                     </tbody>
                 </table>
             </div>
+            <hr class="my-4 border-2 border-primary">
             <div class="row" id="user_agent_section">
                 <div class="row">
                     <div class="col-xs-6">
-                        <h6>User-Agent</h6>    
+                        <h6>User-Agent (White List Validation) </h6>    
                     </div>
                     <div class="col-xs-6 text-right">
-                        <button type="button" class="btn btn-primary" id="clear_user_agent"><i class="fa fa-history"></i> Clear validation
+                        <button type="button" class="btn btn-primary" id="open_modal_user_agent" data-toggle="modal" data-target="#user_agent_modal">
+                            <i class="fa fa-history"></i> Add validation
+                        </button>
+                        
+                        <button type="button" class="btn btn-primary" id="clear_user_agent">
+                            <i class="fa fa-history"></i> Clear validation
                         </button>
                     </div>
+                </div>
                 <p class="text-center"><i class="fa fa-check-circle" aria-hidden="true"></i> User-Agent Validation</p>
                 <table id="clientUserAgentTable" class="table table-striped table-bordered table-hover">
                     <thead style="background-color: #442c5f; color: white;">
                         <tr>
+                            <th class="col"><i class="fa fa-envelope" aria-hidden="true"></i> Mail Service</th>
+                            <th class="col"><i class="fa fa-user-circle" aria-hidden="true"></i> Tenant</th>
                             <th class="col"><i class="fa fa-window-maximize" aria-hidden="true"></i> Device</th>
                             <th class="col"><i class="fa fa-terminal" aria-hidden="true"></i> Client / Navigator</th>
                             <th class="col"><i class="fa fa-address-card" aria-hidden="true"></i> User Agent</th>
-                            <th class="col"><i class="fa fa-check-square-o" aria-hidden="true"></i> Validation</th>
+                            <th class="col"><i class="fa fa-envelope-open" aria-hidden="true"></i> Email Validation</th>
+                            <th class="col"><i class="fa fa-file-image-o" aria-hidden="true"></i> Image Validation</th>
                         </tr>
                     </thead>
                     <tbody>
                     </tbody>
-                </div>
+                </table>
             </div>
         </div>
         <!-- Reporting Settings End -->
     </div>
 </div>
-<!-- Modal -->
-<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel">
+<!-- Modal Send Monitor-->
+<div class="modal fade" id="send_access_modal" tabindex="-1" role="dialog" aria-labelledby="send_access_modalLabel">
     <div class="modal-dialog" role="document" style="min-width: 1100px;">
         <div class="modal-content">
             <div class="modal-header" style="background-color:#27224F;color:white;">
@@ -547,7 +566,7 @@
                         </form>
                     </div>
                     <div class="col-xs-6">
-                        <h6 style="font-size: 1.6rem;">Email Template - Required</h6>
+                        <h6 style="font-size: 1.6rem;">Email Template</h6>
                         <div>
                             <label for="email-template" class="form-label">Selected Template:</label>
                             <select class="form-select" id="email-template">
@@ -576,13 +595,13 @@
                                     <i class="fa fa-user-secret"></i>
                                 </span>
                                 <input type="text" class="form-control" id="specialist_name_modal" placeholder="Write your name"
-                                    style="width: 50%; height:40px; box-shadow: none; border: 1px solid #ccc;">
+                                style="width: 50%; height:40px; box-shadow: none; border: 1px solid #ccc;" required>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row" style="margin-left: 10px;">
-                    <h6 style="font-size: 1.6rem;">SMTP - Required</h6>
+                    <h6 style="font-size: 1.6rem;">SMTP - Required (Gophish)</h6>
                     <div class="col-xs-2">
                         <label class="control-label" for="profile">Sending Profile:</label>
                     </div>
@@ -601,7 +620,27 @@
                 <button type="button" class="btn btn-primary" id="send_monitor_via_gophish"
                     style="min-height: 60px; padding: 10px 20px;"><i class="fa fa-paper-plane" aria-hidden="true"></i> Send Phishing Monitor to Client Via Gophish  <img style="margin-left:10px;" src="/images/logo_inv_small.png"></button>
                 <button type="button" class="btn btn-primary" id="send_monitor_via_apolo"
-                    style="min-height: 60px; padding: 10px 20px;" disabled><i class="fa fa-paper-plane" aria-hidden="true"></i> Send Phishing Monitor to Client Via Apolo <i class="fa fa-rocket" aria-hidden="true"></i> </button>
+                    style="min-height: 60px; padding: 10px 20px;" ><i class="fa fa-paper-plane" aria-hidden="true"></i> Send Phishing Monitor to Client Via Apolo <i class="fa fa-rocket" aria-hidden="true"></i> </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal User Agent-->
+<div class="modal fade" id="user_agent_modal" tabindex="-1" role="dialog" aria-labelledby="user_agent_modalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color:#442c5f;color:white;">
+                <h4 class="modal-title" id="user_agent_modalLabel">Add User Agent Validation</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>User Agent. [WIP]</p>                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
