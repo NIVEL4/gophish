@@ -81,7 +81,7 @@ var api = {
         post: function(data) {
             return query("/client", "POST", data, false)
         },
-        // history() Querys the API for GETs /client_history
+        // history() Querys the API for GETs /client/history
         history: function() {
             return query("/client/history", "GET", {}, false)
         },
