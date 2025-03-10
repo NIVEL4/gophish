@@ -2,14 +2,15 @@
 -- SQL in section 'Up' is executed when this migration is applied
 CREATE TABLE `client_history` (
     `id` SERIAL PRIMARY KEY,
-    `name` VARCHAR(64) NOT NULL DEFAULT 'Not provided',
-    `email` VARCHAR(255) NOT NULL DEFAULT 'Not provided',
-    `monitor_url` VARCHAR(255) NOT NULL DEFAULT 'Not provided',
-    `monitor_password` VARCHAR(255) NOT NULL DEFAULT 'Not provided',
-    `apolo_api_key` VARCHAR(255) NOT NULL DEFAULT 'Not provided',
+    `name` VARCHAR(64) NOT NULL,
+    `email` VARCHAR(255) NOT NULL,
+    `monitor_url` VARCHAR(255) NOT NULL,
+    `monitor_password` VARCHAR(255) NOT NULL,
+    `apolo_api_key` VARCHAR(255) NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `send_date` TIMESTAMP NULL,
-    `change_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    `sent_date` TIMESTAMP NULL,
+    `sent_by` VARCHAR(30) NOT NULL,
+    `send_method` VARCHAR(20) NOT NULL
 );
 
 -- +goose Down

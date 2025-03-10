@@ -242,7 +242,7 @@ $(document).ready(function () {
                 $("#client_name, #client_email, #client_monitor_url, #client_monitor_password, #client_api_key").prop("readonly", true);
 
                 $(".lock-field").each(function() {
-                    $(this).html('<i class="fa fa-unlock"></i>');
+                    $(this).html('<i class="fa fa-lock"></i>');
                 });
 
             } else {
@@ -453,10 +453,10 @@ $(document).ready(function () {
 
         if (input.prop("readonly")) {
             input.prop("readonly", false);
-            lockButton.html('<i class="fa fa-lock"></i>');
+            lockButton.html('<i class="fa fa-unlock"></i>');
         } else {
             input.prop("readonly", true);
-            lockButton.html('<i class="fa fa-unlock"></i>');
+            lockButton.html('<i class="fa fa-lock"></i>');
         }
     });
 
