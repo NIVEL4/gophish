@@ -17,7 +17,11 @@ func (as *Server) Client(w http.ResponseWriter, r *http.Request) {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
 			return
 		}
-		// Respond with the client data
+		// Check if the client is empty
+		if client.Name == "" && client.Email == "" {
+			JSONResponse(w, models.Response{Success: false, Message: "No clients registered."}, http.StatusOK)
+			return
+		}
 		JSONResponse(w, client, http.StatusOK)
 	case r.Method == "POST":
 		// Handle client update

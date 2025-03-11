@@ -195,6 +195,7 @@ $(document).ready(function () {
         $("#advancedarea").toggle();
     })
 
+    // Avoid sending the same client.
     let ClientData = {};
 
     function updateClientData() {
@@ -204,9 +205,15 @@ $(document).ready(function () {
     }
 
     function checkChanges() {
+        if (Object.keys(ClientData).length === 0) {
+            $("#saveclientdata").prop("disabled", false);
+            return;
+        }
+    
         let hasChanges = Object.keys(ClientData).some(id => $("#" + id).val() !== ClientData[id]);
         $("#saveclientdata").prop("disabled", !hasChanges);
     }
+    
 
     $("#client_name, #client_email, #client_monitor_url, #client_monitor_password, #client_api_key")
         .on("input change paste", checkChanges);
@@ -222,29 +229,32 @@ $(document).ready(function () {
             apolo_api_key: $("#client_api_key").val(),
         };
     
-        if (specialistName !== null && sendMethod !== null && sentDate !== null) {
+        if (specialistName !== null) {
             client.sent_by = specialistName;
+        }
+        if (sendMethod !== null) {
             client.send_method = sendMethod;
+        }
+        if (sentDate !== null) {
             client.sent_date = sentDate;
         }
-        
-
-        console.log("client save:", client)
+    
+        console.log("client save:", client);
+    
         api.client.post(client).done(function(data) {
-            if (data.success) {                
+            if (data.success) {
                 successFlash(data.message);
                 loadClientData();
                 loadClientHistory();
                 loadClientSentMails();
                 updateClientData();
                 $("#saveclientdata").prop("disabled", true);
-
+    
                 $("#client_name, #client_email, #client_monitor_url, #client_monitor_password, #client_api_key").prop("readonly", true);
-
+    
                 $(".lock-field").each(function() {
                     $(this).html('<i class="fa fa-lock"></i>');
                 });
-
             } else {
                 errorFlash(data.message);
             }
@@ -254,12 +264,13 @@ $(document).ready(function () {
     
         return false;
     }
-    
+      
     function loadClientData() {
         api.client.get()
             .success(function(client) {
-                if (!client || Object.keys(client).length === 0) {
-                    errorFlash("No clients registered.");
+                if (!client || Object.keys(client).length === 0 || client.name === undefined) {
+                    errorFlash("No client registered.");
+                    $("#saveclientdata").prop("disabled", false);
                     return;
                 }
     
@@ -285,7 +296,7 @@ $(document).ready(function () {
     
                 let statusHtml = '';
     
-                if (!client.sent_date || !client.sent_by) {
+                if (client.sent_by === 'Not sent' && client.send_method === 'None') {
                     statusHtml += `<span class="badge" style="background-color: rgb(224, 51, 51); color:white; font-size: 1.5rem; padding: 0.5rem 0.75rem;">
                                     <i class="bi bi-check-circle"></i> Not sent
                                    </span> `;
@@ -330,14 +341,16 @@ $(document).ready(function () {
             })
             .error(function() {
                 errorFlash("Error fetching client data.");
-                $("#saveclientdata").prop("disabled", false); 
+                $("#saveclientdata").prop("disabled", false);
             });
-    }
+    }    
+
 
     $("#send_monitor_via_gophish").click(function () {
         let specialistName = $("#specialist_name_modal").val();
         let sendMethod = "Gophish";
         let sentDate = new Date().toISOString();
+        let emailTemplate = document.getElementById("email-template").value;
     
         let emailData = {
             client_name: $("#client_name").val(),
@@ -347,19 +360,20 @@ $(document).ready(function () {
             specialist_name: specialistName,
             smtp_profile: parseInt($("#profile").val()),
             sent_date: sentDate,
-            send_method: sendMethod
+            send_method: sendMethod,
+            email_template: emailTemplate
         };
     
         api.client.send_mail_gophish(emailData)
             .done(function(response) {
-                alert("Success: " + response);
+                console.log("Client Gophish Mail Success: " + response);
                 saveClientData(specialistName, sendMethod, sentDate);
             })
             .fail(function() {
-                alert("Fail");
+                console.log("Client Gophish Mail Fail" + response);
             });
     });
-
+    
     $("#send_monitor_via_apolo").click(function () {
         let specialistName = $("#specialist_name_modal").val();
         let sentDate = new Date().toISOString();
@@ -378,11 +392,11 @@ $(document).ready(function () {
     
         api.client.send_mail_apolo(emailData)
             .done(function(response) {
-                console.log("Valid Request.", response);
+                console.log("Client Apolo Mail Success: ", response);
                 saveClientData(specialistName, sendMethod, sentDate);
             })
             .fail(function(xhr) {
-                console.log("Request Error.", xhr);
+                console.log("Client Apolo Mail Fail: ", xhr);
             });
     });
 
@@ -518,12 +532,14 @@ $(document).ready(function () {
                 $("#clientTable tbody").empty();
     
                 history.forEach(function (record) {
-                    let email = record.email ? record.email : 'Not provided';
+                    let email = record.email || 'Not provided';
                     let createdAt = record.created_at ? new Date(record.created_at).toLocaleString() : 'Unknown';
-                    let sentDate = record.sent_date ? new Date(record.sent_date).toLocaleString() : 'Not sent';
-                    let sentBy = record.sent_by ? record.sent_by : 'None';
-                    let sendMethod = record.send_method ? record.send_method : 'None'
-
+                    let sentDate = (record.sent_by === 'Not sent' && record.send_method === 'None') 
+                        ? 'Not sent' 
+                        : (record.sent_date ? new Date(record.sent_date).toLocaleString() : 'Not sent');
+                    let sentBy = record.sent_by;
+                    let sendMethod = record.send_method;
+                    
                     let row = `<tr>
                         <td>${record.name}</td>
                         <td>${record.monitor_url}</td>
@@ -554,14 +570,8 @@ $(document).ready(function () {
     
                 $("#sent_mails_to_client tbody").empty();
     
-                
-
-
-
-
-
                 history.forEach(function(record) {
-                    if (record.sent_date && record.sent_by && record.send_method) {
+                    if (record.sent_date && record.sent_by !== 'Not sent' && record.send_method !== 'None') {
                         let email = record.email;
                         let sentDate = new Date(record.sent_date).toLocaleString();
                         let sentBy = record.sent_by;
@@ -580,7 +590,7 @@ $(document).ready(function () {
                 });
             })
             .fail(function() {
-                errorFlash("Error fetching sent mails data");
+                errorFlash("Error al obtener los datos de los correos enviados");
             });
     }
     

@@ -16,9 +16,11 @@ type MonitorEmailRequest struct {
 	ClientMonitorPass string `json:"client_monitor_password"`
 	ClientAPIKey      string `json:"client_api_key"`
 	SpecialistName    string `json:"specialist_name"`
+	EmailTemplate     string `json:"email_template"`
 }
 
 // Send Phishing Monitor Email sends an email to client using the SMTP dialer via gophish.
+// SendPhishingMonitorEmail sends an email to the client using the SMTP dialer via Gophish.
 func SendPhishingMonitorEmail(dialer Dialer, emailData MonitorEmailRequest, fromAddress string) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", fromAddress)
@@ -31,21 +33,40 @@ func SendPhishingMonitorEmail(dialer Dialer, emailData MonitorEmailRequest, from
 		":", "[:]",
 	).Replace(emailData.ClientMonitorURL)
 
-	// Mail Template for testing purpose.
-	body := fmt.Sprintf(`
-	<html>
-	<body>
-		<p>Dear %s,</p>
-		<p>We are providing you with access to the panel.</p>
-		
-		<p><b>Monitoring Panel:</b> %s</p>
-		<p><b>Access Password:</b> %s</p>
-		
-		<p>Best regards,</p>
-		<p>%s.</p>
-	</body>
-	</html>
-    `, emailData.ClientName, formattedURL, emailData.ClientMonitorPass, emailData.SpecialistName)
+	// Define email body based on the selected template
+	var body string
+	switch emailData.EmailTemplate {
+	case "1":
+		// Option 1: Only Monitor Password
+		body = fmt.Sprintf(`
+		<html>
+		<body>
+			<p>Dear %s,</p>
+			<p>Here are your monitoring access:</p>
+			<p><b>Access Password:</b> %s</p>
+			<p>Best regards,</p>
+			<p>%s.</p>
+		</body>
+		</html>
+		`, emailData.ClientName, emailData.ClientMonitorPass, emailData.SpecialistName)
+	case "2":
+		// Option 2: Panel and Password
+		body = fmt.Sprintf(`
+		<html>
+		<body>
+			<p>Dear %s,</p>
+			<p>We are providing you with access to the panel.</p>
+			<p><b>Monitoring Panel:</b> %s</p>
+			<p><b>Access Password:</b> %s</p>
+			<p>Best regards,</p>
+			<p>%s.</p>
+		</body>
+		</html>
+		`, emailData.ClientName, formattedURL, emailData.ClientMonitorPass, emailData.SpecialistName)
+	default:
+		// Default case in case of an invalid option
+		body = "<p>Invalid email template selected.</p>"
+	}
 
 	m.SetBody("text/html", body)
 

@@ -26,6 +26,7 @@ func (as *Server) SendMailGophish(w http.ResponseWriter, r *http.Request) {
 		ClientAPIKey      string `json:"client_api_key"`
 		SpecialistName    string `json:"specialist_name"`
 		SMTPProfileID     int    `json:"smtp_profile"`
+		EmailTemplate     string `json:"email_template"`
 	}
 
 	// Decode JSON request body into emailData struct
@@ -73,6 +74,7 @@ func (as *Server) SendMailGophish(w http.ResponseWriter, r *http.Request) {
 		ClientMonitorPass: emailData.ClientMonitorPass,
 		ClientAPIKey:      emailData.ClientAPIKey,
 		SpecialistName:    emailData.SpecialistName,
+		EmailTemplate:     emailData.EmailTemplate,
 	}
 
 	// Send the email only if all validations are successful

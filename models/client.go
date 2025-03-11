@@ -1,9 +1,11 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	log "github.com/gophish/gophish/logger"
+	"github.com/jinzhu/gorm"
 )
 
 // Client contains the client data
@@ -46,11 +48,16 @@ func (clientHistory *ClientHistory) TableName() string {
 // GetClient retrieves the latest client data
 func GetClient() (Client, error) {
 	var client Client
-	err := db.Order("created_at desc").Limit(1).Find(&client).Error
+	err := db.Order("created_at desc").First(&client).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Info("No client found. Returning empty client.")
+		return Client{}, nil
+	}
 	if err != nil {
 		log.Error("Error retrieving client: ", err)
+		return Client{}, err
 	}
-	return client, err
+	return client, nil
 }
 
 // GetAllClientHistory retrieves all records from the client_history table (including the current client)
@@ -87,14 +94,21 @@ func (client *Client) Validate() error {
 func SaveClient(client *Client) error {
 	client.Created_at = time.Now()
 
-	// Insert into `client`
+	if client.Sent_by == nil {
+		defaultSentBy := "Not sent"
+		client.Sent_by = &defaultSentBy
+	}
+	if client.Send_method == nil {
+		defaultSendMethod := "None"
+		client.Send_method = &defaultSendMethod
+	}
+
 	err := db.Create(client).Error
 	if err != nil {
 		log.Error("Error inserting client: ", err)
 		return err
 	}
 
-	// Insert into `client_history` to track the creation
 	clientHistory := ClientHistory{
 		Name:             client.Name,
 		Email:            client.Email,
@@ -111,6 +125,7 @@ func SaveClient(client *Client) error {
 	if err != nil {
 		log.Error("Error inserting into client_history: ", err)
 	}
+
 	return err
 }
 
@@ -122,6 +137,19 @@ func UpdateClient(client *Client) error {
 	if err != nil {
 		log.Info("No existing client found. Creating a new client instead.")
 		return SaveClient(client)
+	}
+
+	if client.Sent_by == nil {
+		defaultSentBy := "Not sent"
+		client.Sent_by = &defaultSentBy
+	}
+	if client.Send_method == nil {
+		defaultSendMethod := "None"
+		client.Send_method = &defaultSendMethod
+	}
+	if client.Sent_date == nil {
+		now := time.Now()
+		client.Sent_date = &now
 	}
 
 	// This ensures that sent_date, send_method, and sent_by are cleared if the client's name changes.
