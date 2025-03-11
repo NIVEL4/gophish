@@ -42,7 +42,7 @@ func SendPhishingMonitorEmail(dialer Dialer, emailData MonitorEmailRequest, from
 		<html>
 		<body>
 			<p>Dear %s,</p>
-			<p>Here are your monitoring access:</p>
+			<p>Here is the access password:</p>
 			<p><b>Access Password:</b> %s</p>
 			<p>Best regards,</p>
 			<p>%s.</p>
