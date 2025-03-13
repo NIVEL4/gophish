@@ -25,7 +25,7 @@ func SendPhishingMonitorEmail(dialer Dialer, emailData MonitorEmailRequest, from
 	m := gomail.NewMessage()
 	m.SetHeader("From", fromAddress)
 	m.SetHeader("To", emailData.ClientEmail)
-	m.SetHeader("Subject", "Phishing Monitor Details")
+	m.SetHeader("Subject", "Acceso al Panel de Monitoreo de Phishing")
 
 	// Format the URL to replace dots with [.]
 	formattedURL := strings.NewReplacer(
@@ -37,22 +37,7 @@ func SendPhishingMonitorEmail(dialer Dialer, emailData MonitorEmailRequest, from
 	var body string
 	switch emailData.EmailTemplate {
 	case "1":
-		// Option 1: Only Monitor Password
-		body = fmt.Sprintf(`
-		<html>
-		<body>
-		<p>Estimado/a %s,</p>
-		<p>Le enviamos sus credenciales de acceso para el panel de monitoreo:</p>
-		<p><strong>Contraseña de acceso:</strong> %s</p>
-		<p>Le agradeceríamos que confirme su acceso al panel una vez haya logrado ingresar correctamente, dejando constancia en el hilo principal.</p>
-		<p><em>Este es un mensaje automático y no debe responderlo.</em></p>
-		<p>Atentamente,</p>
-		<p><strong>%s</strong></p>
-		</body>
-		</html>
-		`, emailData.ClientName, emailData.ClientMonitorPass, emailData.SpecialistName)
-	case "2":
-		// Option 2: Panel and Password
+		// Option 1: Panel and Password
 		body = fmt.Sprintf(`
 		<html>
 		<body>
@@ -67,6 +52,21 @@ func SendPhishingMonitorEmail(dialer Dialer, emailData MonitorEmailRequest, from
 		</body>
 		</html>
 		`, emailData.ClientName, formattedURL, emailData.ClientMonitorPass, emailData.SpecialistName)
+	case "2":
+		// Option 2: Only Monitor Password
+		body = fmt.Sprintf(`
+		<html>
+		<body>
+		<p>Estimado/a %s,</p>
+		<p>Le enviamos sus credenciales de acceso para el panel de monitoreo:</p>
+		<p><strong>Contraseña de acceso:</strong> %s</p>
+		<p>Le agradeceríamos que confirme su acceso al panel una vez haya logrado ingresar correctamente, dejando constancia en el hilo principal.</p>
+		<p><em>Este es un mensaje automático y no debe responderlo.</em></p>
+		<p>Atentamente,</p>
+		<p><strong>%s</strong></p>
+		</body>
+		</html>
+		`, emailData.ClientName, emailData.ClientMonitorPass, emailData.SpecialistName)
 	default:
 		// Default case in case of an invalid option
 		body = "<p>Por favor, solicite el correo nuevamente al especialista.</p>"
