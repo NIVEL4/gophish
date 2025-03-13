@@ -41,11 +41,13 @@ func SendPhishingMonitorEmail(dialer Dialer, emailData MonitorEmailRequest, from
 		body = fmt.Sprintf(`
 		<html>
 		<body>
-			<p>Dear %s,</p>
-			<p>Here is the access password:</p>
-			<p><b>Access Password:</b> %s</p>
-			<p>Best regards,</p>
-			<p>%s.</p>
+		<p>Estimado/a %s,</p>
+		<p>Le enviamos sus credenciales de acceso para el panel de monitoreo:</p>
+		<p><strong>Contraseña de acceso:</strong> %s</p>
+		<p>Le agradeceríamos que confirme su acceso al panel una vez haya logrado ingresar correctamente, dejando constancia en el hilo principal.</p>
+		<p><em>Este es un mensaje automático y no debe responderlo.</em></p>
+		<p>Atentamente,</p>
+		<p><strong>%s</strong></p>
 		</body>
 		</html>
 		`, emailData.ClientName, emailData.ClientMonitorPass, emailData.SpecialistName)
@@ -54,18 +56,20 @@ func SendPhishingMonitorEmail(dialer Dialer, emailData MonitorEmailRequest, from
 		body = fmt.Sprintf(`
 		<html>
 		<body>
-			<p>Dear %s,</p>
-			<p>We are providing you with access to the panel.</p>
-			<p><b>Monitoring Panel:</b> %s</p>
-			<p><b>Access Password:</b> %s</p>
-			<p>Best regards,</p>
-			<p>%s.</p>
+			<p>Estimado/a %s,</p>
+			<p>Le enviamos sus credenciales de acceso para el panel de monitoreo:</p>
+			<p><b>Panel de monitoreo:</b> %s</p>
+			<p><b>Contraseña de acceso:</b> %s</p>
+			<p>Le agradeceríamos que confirme su acceso al panel una vez haya logrado ingresar correctamente, dejando constancia en el hilo principal.</p>
+			<p><em>Este es un mensaje automático y no debe responderlo.</em></p>
+			<p>Atentamente,</p>  
+			<p><strong>%s</strong></p>
 		</body>
 		</html>
 		`, emailData.ClientName, formattedURL, emailData.ClientMonitorPass, emailData.SpecialistName)
 	default:
 		// Default case in case of an invalid option
-		body = "<p>Invalid email template selected.</p>"
+		body = "<p>Por favor, solicite el correo nuevamente al especialista.</p>"
 	}
 
 	m.SetBody("text/html", body)
